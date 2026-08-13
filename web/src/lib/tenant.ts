@@ -1,7 +1,7 @@
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
-export const TENANT_STORAGE_KEY = "terrapos_tenant_id";
+export const TENANT_STORAGE_KEY = "runix_tenant_id";
 
 export function getStoredTenantId(): string {
   if (typeof window === "undefined") return "";

@@ -31,10 +31,10 @@ type ReceiptConfig = {
 };
 
 const DEFAULT_CONFIG: ReceiptConfig = {
-  storeName: "TerraPOS",
+  storeName: "RuniX",
   address: "",
   footer: "Terima kasih.",
-  cashierName: "Kasir TerraPOS",
+  cashierName: "Kasir RuniX",
   fontSize: 13,
   showLogo: false,
   showQR: false,
@@ -112,10 +112,10 @@ export default function ReceiptSettingsPage() {
       await setDoc(
         doc(db, `tenants/${tenantId}/settings/main`),
         {
-          storeName: config.storeName.trim() || "TerraPOS",
+          storeName: config.storeName.trim() || "RuniX",
           address: config.address.trim(),
           footer: config.footer.trim() || "Terima kasih.",
-          cashierName: config.cashierName.trim() || "Kasir TerraPOS",
+          cashierName: config.cashierName.trim() || "Kasir RuniX",
           receiptFontSize: config.fontSize,
           receiptShowLogo: config.showLogo,
           receiptShowQR: config.showQR,
@@ -429,7 +429,7 @@ export default function ReceiptSettingsPage() {
               className="input"
               value={config.cashierName}
               onChange={(e) => update("cashierName", e.target.value)}
-              placeholder="Kasir TerraPOS"
+              placeholder="Kasir RuniX"
             />
 
             <div className="small" style={{ marginTop: 10 }}>Footer Struk</div>
@@ -589,8 +589,8 @@ export default function ReceiptSettingsPage() {
               onChange={(v) => update("showPaymentMethod", v)}
             />
             <ToggleItem
-              label="Watermark TerraPOS"
-              desc={isFreeUser ? "Upgrade ke Seed atau lebih tinggi untuk menonaktifkan" : "Tampilkan 'Powered by TerraPOS' di bawah struk"}
+              label="Watermark RuniX"
+              desc={isFreeUser ? "Upgrade ke Seed atau lebih tinggi untuk menonaktifkan" : "Tampilkan 'Powered by RuniX' di bawah struk"}
               value={isFreeUser ? true : config.showWatermark}
               onChange={(v) => {
                 if (isFreeUser) {
@@ -634,7 +634,7 @@ export default function ReceiptSettingsPage() {
               </div>
             )}
 
-            <div className="store-name">{config.storeName || "TerraPOS"}</div>
+            <div className="store-name">{config.storeName || "RuniX"}</div>
 
             {config.showAddress && config.address && (
               <div className="center muted" style={{ fontSize: config.fontSize - 2 }}>
@@ -767,7 +767,7 @@ export default function ReceiptSettingsPage() {
 
             {(isFreeUser || config.showWatermark) && (
               <div className="center" style={{ fontSize: config.fontSize - 3, opacity: 0.5, marginTop: 6 }}>
-                Powered by TerraPOS
+                Powered by RuniX
               </div>
             )}
           </div>

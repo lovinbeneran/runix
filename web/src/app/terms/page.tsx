@@ -81,15 +81,15 @@ export default function TermsPage() {
           <p className="legal-updated">Terakhir diperbarui: 28 Mei 2025</p>
 
           <p>
-            Selamat datang di TerraPOS. Dengan mengakses atau menggunakan layanan kami,
+            Selamat datang di RuniX. Dengan mengakses atau menggunakan layanan kami,
             Anda menyetujui syarat dan ketentuan berikut. Harap baca dengan seksama.
           </p>
 
           <h2>1. Definisi</h2>
           <ul>
-            <li><b>"Layanan"</b> — Platform Point of Sale (POS) berbasis web yang disediakan oleh TerraPOS, termasuk aplikasi web, fitur QR ordering, dan semua fitur terkait.</li>
+            <li><b>"Layanan"</b> — Platform Point of Sale (POS) berbasis web yang disediakan oleh RuniX, termasuk aplikasi web, fitur QR ordering, dan semua fitur terkait.</li>
             <li><b>"Pengguna"</b> — Setiap individu atau entitas bisnis yang mendaftar dan menggunakan Layanan.</li>
-            <li><b>"Tenant"</b> — Akun bisnis/outlet yang dibuat dalam platform TerraPOS.</li>
+            <li><b>"Tenant"</b> — Akun bisnis/outlet yang dibuat dalam platform RuniX.</li>
             <li><b>"Customer"</b> — Pelanggan akhir yang menggunakan fitur publik (seperti QR menu ordering).</li>
           </ul>
 
@@ -113,7 +113,7 @@ export default function TermsPage() {
 
           <h2>4. Paket Layanan & Pembayaran</h2>
           <ul>
-            <li>TerraPOS menyediakan berbagai paket layanan (gratis dan berbayar).</li>
+            <li>RuniX menyediakan berbagai paket layanan (gratis dan berbayar).</li>
             <li>Harga dapat berubah sewaktu-waktu dengan pemberitahuan minimal 30 hari sebelumnya.</li>
             <li>Pembayaran paket berbayar bersifat non-refundable kecuali ditentukan lain.</li>
             <li>Jika pembayaran gagal atau terlambat, akses ke fitur premium dapat dibatasi.</li>
@@ -122,8 +122,8 @@ export default function TermsPage() {
           <h2>5. Data & Kepemilikan Konten</h2>
           <ul>
             <li>Semua data bisnis (produk, order, laporan) yang Anda masukkan tetap menjadi milik Anda.</li>
-            <li>TerraPOS tidak akan menjual atau membagikan data bisnis Anda kepada pihak ketiga.</li>
-            <li>Anda memberikan TerraPOS lisensi terbatas untuk memproses data Anda guna menyediakan Layanan.</li>
+            <li>RuniX tidak akan menjual atau membagikan data bisnis Anda kepada pihak ketiga.</li>
+            <li>Anda memberikan RuniX lisensi terbatas untuk memproses data Anda guna menyediakan Layanan.</li>
             <li>Anda bertanggung jawab atas backup data Anda sendiri (kami menyediakan fitur export).</li>
           </ul>
 
@@ -131,12 +131,12 @@ export default function TermsPage() {
           <ul>
             <li>Kami berusaha menjaga uptime Layanan minimal 99% per bulan.</li>
             <li>Maintenance terjadwal akan diinformasikan minimal 24 jam sebelumnya.</li>
-            <li>TerraPOS tidak bertanggung jawab atas kerugian akibat downtime yang disebabkan force majeure, serangan siber, atau gangguan pihak ketiga (termasuk Google/Firebase).</li>
+            <li>RuniX tidak bertanggung jawab atas kerugian akibat downtime yang disebabkan force majeure, serangan siber, atau gangguan pihak ketiga (termasuk Google/Firebase).</li>
           </ul>
 
           <h2>7. Batasan Tanggung Jawab</h2>
           <ul>
-            <li>TerraPOS disediakan "sebagaimana adanya" (as-is) tanpa jaminan tersurat maupun tersirat.</li>
+            <li>RuniX disediakan "sebagaimana adanya" (as-is) tanpa jaminan tersurat maupun tersirat.</li>
             <li>Kami tidak bertanggung jawab atas kerugian langsung maupun tidak langsung yang timbul dari penggunaan Layanan.</li>
             <li>Total tanggung jawab kami terbatas pada jumlah yang telah Anda bayarkan dalam 3 bulan terakhir.</li>
           </ul>
@@ -165,13 +165,13 @@ export default function TermsPage() {
           <h2>11. Kontak</h2>
           <p>
             Untuk pertanyaan mengenai Syarat & Ketentuan ini, hubungi kami di:<br />
-            Email: <a href="mailto:support@terrapos.id">support@terrapos.id</a>
+            Email: <a href="mailto:support@runix.id">support@runix.id</a>
           </p>
         </div>
 
         <footer className="legal-footer">
           <a href="/privacy" style={{ color: "#888", marginRight: 16 }}>Kebijakan Privasi</a>
-          <span>&copy; {new Date().getFullYear()} TerraPOS</span>
+          <span>&copy; {new Date().getFullYear()} RuniX</span>
         </footer>
       </div>
     </main>

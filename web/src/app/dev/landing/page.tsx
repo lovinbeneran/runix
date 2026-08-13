@@ -185,7 +185,7 @@ export default function DevLandingPage() {
         <div className="row">
           <div>
             <div className="h1">Landing Page Editor</div>
-            <div className="small">Kustomisasi halaman depan TerraPOS</div>
+            <div className="small">Kustomisasi halaman depan RuniX</div>
           </div>
           <div className="spacer" />
           <button className="btn" onClick={() => r.push("/dev")}>← Dev Console</button>

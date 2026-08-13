@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * TerraPOS - Client-Side Rate Limiter
+ * RuniX - Client-Side Rate Limiter
  * ============================================================
  * 
  * Rate limiting untuk public endpoints (QR customer ordering).
@@ -22,7 +22,7 @@ interface RateLimitEntry {
   lastRequest: number;
 }
 
-const STORAGE_KEY = "terrapos_rl";
+const STORAGE_KEY = "runix_rl";
 
 /**
  * Get rate limit data from localStorage
@@ -91,7 +91,7 @@ export function checkRateLimit(
 }
 
 /**
- * Rate limit presets for TerraPOS
+ * Rate limit presets for RuniX
  */
 export const RATE_LIMITS = {
   // Customer: max 5 orders per 10 minutes per device

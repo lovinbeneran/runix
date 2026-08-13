@@ -13,6 +13,7 @@ export type ReceiptData = {
   tableNo?: string | null;
   cashierEmail?: string;
   paymentMethod?: "CASH" | "QRIS" | null;
+  orderType?: "DINE_IN" | "TAKEAWAY" | null;
   subtotal: number;
   discount: number;
   total: number;
@@ -254,7 +255,7 @@ export function receiptHTML(d: ReceiptData) {
   <div class="wrap">
     <div class="center">
       ${logoHtml}
-      <div class="store-name">${escapeHtml(d.storeName || "TerraPOS")}</div>
+      <div class="store-name">${escapeHtml(d.storeName || "RuniX")}</div>
       ${d.address?.trim() ? `<div class="store-address">${escapeHtml(d.address.trim())}</div>` : ``}
       <div class="badge">${escapeHtml(title)}</div>
       ${d.isCopy ? `<div style="margin-top:6px;font-weight:900;font-size:14px;color:#666;">*** COPY ***</div>` : ``}
@@ -265,6 +266,7 @@ export function receiptHTML(d: ReceiptData) {
     <div class="center">
       <div class="info-row">${escapeHtml(d.dateText)}</div>
       <div class="info-row">Order: <b>${escapeHtml(d.orderNo)}</b></div>
+      ${d.orderType ? `<div class="info-row">Tipe: <b style="letter-spacing:0.5px;">${d.orderType === "TAKEAWAY" ? "TAKE AWAY (BUNGKUS)" : "DINE IN (MAKAN DI TEMPAT)"}</b></div>` : ``}
       ${d.tableNo ? `<div class="info-row">Meja: <b>${escapeHtml(String(d.tableNo))}</b></div>` : ``}
       ${d.cashierEmail ? `<div class="info-row">Kasir: ${escapeHtml(String(d.cashierEmail))}</div>` : ``}
       ${d.paymentMethod ? `<div class="info-row">Metode: <b>${escapeHtml(d.paymentMethod)}</b></div>` : ``}
@@ -298,7 +300,7 @@ export function receiptHTML(d: ReceiptData) {
       <div style="font-size:12px;opacity:0.8;">${escapeHtml(footerText)}</div>
     </div>
 
-    ${showWatermark ? `<div class="center" style="padding:2px 0;margin-top:4px;"><div style="font-size:10px;opacity:0.45;">Powered by TerraPOS</div></div>` : ``}
+    ${showWatermark ? `<div class="center" style="padding:2px 0;margin-top:4px;"><div style="font-size:10px;opacity:0.45;">Powered by RuniX</div></div>` : ``}
   </div>
 
   ${qrScript}

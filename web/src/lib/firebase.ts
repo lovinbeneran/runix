@@ -27,7 +27,7 @@ function must(v: string | undefined, name: string) {
   if (typeof window === "undefined") return "PLACEHOLDER";
   // Di browser, kalau env kosong kasih error yang jelas
   throw new Error(
-    `Firebase config missing: ${name}. Cek file .env.local di folder web (Terra POS/web).`
+    `Firebase config missing: ${name}. Cek file .env.local di folder web (RuniX/web).`
   );
 }
 
@@ -81,8 +81,8 @@ if (typeof window !== "undefined") {
     // 1) Jika onAuthStateChanged langsung kasih user → done
     const unsub = auth.onAuthStateChanged((user) => {
       if (user) {
-        localStorage.setItem("terrapos_uid", user.uid);
-        localStorage.setItem("terrapos_email", user.email || "");
+        localStorage.setItem("runix_uid", user.uid);
+        localStorage.setItem("runix_email", user.email || "");
         done();
         unsub();
       }
@@ -108,8 +108,8 @@ if (typeof window !== "undefined") {
 async function autoReLogin() {
   if (typeof localStorage === "undefined") return;
 
-  const savedEmail = localStorage.getItem("terrapos_saved_email");
-  const savedPass = localStorage.getItem("terrapos_saved_pass");
+  const savedEmail = localStorage.getItem("runix_saved_email");
+  const savedPass = localStorage.getItem("runix_saved_pass");
 
   if (!savedEmail || !savedPass) return;
 
@@ -118,7 +118,7 @@ async function autoReLogin() {
 
   try {
     // Decode password (XOR + base64 obfuscation dari saved-credentials.ts)
-    const XOR_KEY = "TerraPOS2024!";
+    const XOR_KEY = "RuniX2024!";
     let obfuscated: string;
     if (typeof atob !== "undefined") {
       obfuscated = decodeURIComponent(escape(atob(savedPass)));
@@ -158,8 +158,8 @@ if (typeof window !== "undefined") {
     window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1";
 
-  if (isLocalhost && !(window as any).__terraposFunctionsEmulatorConnected) {
+  if (isLocalhost && !(window as any).__runixFunctionsEmulatorConnected) {
     connectFunctionsEmulator(functions, "127.0.0.1", 5001);
-    (window as any).__terraposFunctionsEmulatorConnected = true;
+    (window as any).__runixFunctionsEmulatorConnected = true;
   }
 }

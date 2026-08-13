@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 /**
  * ============================================================
- * TerraPOS - Next.js Middleware (Server-Side Rate Limiting)
+ * RuniX - Next.js Middleware (Server-Side Rate Limiting)
  * ============================================================
  * 
  * Rate limiting berbasis IP untuk public endpoints.

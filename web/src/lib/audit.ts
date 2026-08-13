@@ -9,6 +9,8 @@ import { db } from "./firebase";
 export type AuditAction =
   | "SHIFT_OPEN"
   | "SHIFT_CLOSE"
+  | "SHIFT_CASH_IN"
+  | "SHIFT_CASH_OUT"
   | "ORDER_CREATE"
   | "ORDER_PAID"
   | "ORDER_CANCEL"

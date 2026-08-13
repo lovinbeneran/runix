@@ -58,7 +58,7 @@ export function buildPlainReceipt(d: RawBtReceiptData) {
   const rows: string[] = [];
   const title = (d.title || "STRUK").trim();
 
-  rows.push(center(d.storeName || "TerraPOS"));
+  rows.push(center(d.storeName || "RuniX"));
   if ((d.address || "").trim()) rows.push(center(d.address!.trim()));
   rows.push(center(title));
   if (d.isCopy) rows.push(center("*** COPY ***"));
@@ -107,7 +107,7 @@ export function buildPlainReceipt(d: RawBtReceiptData) {
 
   if (d.showWatermark !== false) {
     rows.push("");
-    rows.push(center("Powered by TerraPOS"));
+    rows.push(center("Powered by RuniX"));
   }
 
   rows.push("");
@@ -137,7 +137,7 @@ export function sendToRawBT(text: string) {
 
 export function getPrintMode(): "browser" | "rawbt" | "bluetooth" {
   if (typeof window === "undefined") return "rawbt";
-  const mode = localStorage.getItem("terrapos_print_mode");
+  const mode = localStorage.getItem("runix_print_mode");
   if (mode === "rawbt") return "rawbt";
   if (mode === "bluetooth") return "bluetooth";
   return "rawbt";
@@ -145,5 +145,5 @@ export function getPrintMode(): "browser" | "rawbt" | "bluetooth" {
 
 export function setPrintMode(mode: "browser" | "rawbt" | "bluetooth") {
   if (typeof window === "undefined") return;
-  localStorage.setItem("terrapos_print_mode", mode);
+  localStorage.setItem("runix_print_mode", mode);
 }

@@ -157,11 +157,11 @@ export default function DownloadPage() {
           <div className="dl-badge">Download Aplikasi</div>
 
           <h1>
-            Akses <em>TerraPOS</em> dari mana saja
+            Akses <em>RuniX</em> dari mana saja
           </h1>
 
           <p className="dl-sub">
-            Install aplikasi TerraPOS di HP Android kamu untuk pengalaman terbaik — akses cepat, notifikasi, dan print langsung ke Bluetooth printer.
+            Install aplikasi RuniX di HP Android kamu untuk pengalaman terbaik — akses cepat, notifikasi, dan print langsung ke Bluetooth printer.
           </p>
 
           {/* DOWNLOAD CARDS */}
@@ -173,7 +173,7 @@ export default function DownloadPage() {
                 Download APK langsung, install di HP tanpa perlu Play Store. Support Bluetooth printer ESC/POS.
               </p>
               <a
-                href="/terrapos.apk"
+                href="/runix.apk"
                 className="dl-btn"
                 download
               >
@@ -219,14 +219,14 @@ export default function DownloadPage() {
               <li>Buka file yang ter-download</li>
               <li>Jika diminta izin &quot;Install dari sumber tidak dikenal&quot;, aktifkan</li>
               <li>Tap &quot;Install&quot; dan tunggu selesai</li>
-              <li>Buka TerraPOS dan login dengan akun kamu</li>
+              <li>Buka RuniX dan login dengan akun kamu</li>
             </ol>
           </div>
         </div>
 
         {/* FOOTER */}
         <footer className="dl-footer">
-          &copy; {new Date().getFullYear()} TerraPOS &mdash; POS modern untuk cafe & resto.
+          &copy; {new Date().getFullYear()} RuniX &mdash; POS modern untuk cafe & resto.
         </footer>
       </div>
     </main>

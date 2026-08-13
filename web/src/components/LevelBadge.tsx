@@ -4,9 +4,9 @@ import { useLevel, UserLevel } from "@/hooks/useLevel";
 
 const LEVEL_CONFIG: Record<UserLevel, { label: string; symbol: string; color: string; bg: string }> = {
   free: { label: "Free Trial", symbol: "⏳", color: "#6b7280", bg: "#f3f4f6" },
-  seed: { label: "Seed", symbol: "🌱", color: "#16a34a", bg: "#f0fdf4" },
-  core: { label: "Core", symbol: "🌍", color: "#2563eb", bg: "#eff6ff" },
-  orbit: { label: "Orbit", symbol: "🚀", color: "#9333ea", bg: "#faf5ff" },
+  delta: { label: "Delta", symbol: "Δ", color: "#16a34a", bg: "#f0fdf4" },
+  omega: { label: "Omega", symbol: "Ω", color: "#2563eb", bg: "#eff6ff" },
+  zeta: { label: "Zeta", symbol: "ζ", color: "#9333ea", bg: "#faf5ff" },
 };
 
 export function LevelBadge({ size = "normal" }: { size?: "small" | "normal" }) {

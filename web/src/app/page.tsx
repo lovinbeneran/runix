@@ -23,438 +23,896 @@ export default function HomePage() {
     }
   }, [r]);
 
-  // Subscribe to landing config from Firestore (safe - fallback to defaults)
+  // Subscribe to landing config from Firestore
   useEffect(() => {
     try {
       const unsub = subscribeLandingConfig((c) => setConfig(c));
       return () => unsub();
     } catch {
-      // If Firestore fails entirely, keep defaults
       return () => {};
     }
   }, []);
 
   const { hero, features, featuresTitle, pricing, pricingTitle, pricingSubtitle, ctaTitle, ctaSubtitle, footerText } = config;
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [activeTabPreview, setActiveTabPreview] = useState<"pos" | "reports" | "stock">("pos");
+  
+  // Custom Device Slider State for Pricing
+  const [deviceSlider, setDeviceSlider] = useState<number>(1);
+  
+  // Interactive Calculator State
+  const [dailyOrders, setDailyOrders] = useState<number>(45);
+  const [avgTicketPrice, setAvgTicketPrice] = useState<number>(25000);
+
+  // Calculated estimates
+  const monthlyRevenue = dailyOrders * avgTicketPrice * 30;
+  const estimatedTimeSavedHours = Math.round((dailyOrders * 2.5 * 30) / 60);
+  const estimatedLeakagePrevented = Math.round(monthlyRevenue * 0.08);
+
+  // FAQ Accordion State
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+
+  const faqs = [
+    {
+      q: "Apakah RuniX POS bisa digunakan secara offline?",
+      a: "Ya! RuniX dilengkapi dengan arsitektur hibrid lokal. Transaksi kasir tetap berjalan lancar tanpa koneksi internet dan otomatis tersinkron saat terhubung kembali."
+    },
+    {
+      q: "Printer thermal jenis apa saja yang didukung RuniX?",
+      a: "RuniX mendukung printer Bluetooth Thermal 58mm & 80mm, USB Thermal, serta integrasi pencetakan langsung melalui RawBT Android."
+    },
+    {
+      q: "Apakah ada biaya tambahan atau royalti penjualan?",
+      a: "Sama sekali tidak ada. Semua paket RuniX berlaku flat bulanan/tahunan tanpa potong komisi penjualan outlet Anda."
+    },
+    {
+      q: "Berapa lama proses setup awal sampai kasir siap pakai?",
+      a: "Hanya butuh waktu kurang dari 3 menit! Cukup daftar, masukkan nama menu & harga, lalu kasir langsung siap digunakan."
+    }
+  ];
 
   return (
     <main>
       <style>{`
-        .lp{
-          min-height:100vh;
-          background:#ffffff;
-          color:#1a1a1a;
-          font-family:var(--font-primary, ui-sans-serif, system-ui, -apple-system, sans-serif);
-          overflow-x:hidden;
-          position:relative;
-        }
-        .lp>*{position:relative;z-index:1;}
-
-        /* FLOATING NATURE ELEMENTS */
-        @keyframes floatDrift{
-          0%{transform:translate(0,0) rotate(0deg);}
-          25%{transform:translate(15px,-20px) rotate(5deg);}
-          50%{transform:translate(-10px,-35px) rotate(-3deg);}
-          75%{transform:translate(20px,-15px) rotate(4deg);}
-          100%{transform:translate(0,0) rotate(0deg);}
-        }
-        @keyframes floatSlow{
-          0%{transform:translate(0,0) rotate(0deg);}
-          33%{transform:translate(-12px,18px) rotate(-4deg);}
-          66%{transform:translate(10px,-12px) rotate(3deg);}
-          100%{transform:translate(0,0) rotate(0deg);}
-        }
-        @keyframes floatRock{
-          0%{transform:translate(0,0);}
-          50%{transform:translate(5px,8px);}
-          100%{transform:translate(0,0);}
-        }
-        .lp-bg-elements{
-          position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;
-        }
-        .lp-float{
-          position:absolute;
-          will-change:transform;
-        }
-        .lp-float--leaf{animation:floatDrift 20s ease-in-out infinite;}
-        .lp-float--rock{animation:floatRock 25s ease-in-out infinite;}
-        .lp-float--tree{animation:floatSlow 30s ease-in-out infinite;}
-
-        /* NAV */
-        .lp-nav{
-          position:fixed;top:0;left:0;right:0;z-index:50;
-          padding:16px 24px;
-          display:flex;align-items:center;justify-content:space-between;
-          backdrop-filter:blur(16px);
-          background:rgba(255,255,255,0.85);
-          border-bottom:1px solid #f0f0f0;
-        }
-        .lp-logo{font-size:22px;font-weight:900;letter-spacing:-0.03em;}
-        .lp-logo span{color:var(--brand,#d59567);}
-        .lp-nav-btns{display:flex;gap:8px;align-items:center;}
-
-        /* BUTTONS */
-        .lp-btn{
-          padding:10px 20px;border-radius:10px;font-weight:700;font-size:14px;
-          border:none;cursor:pointer;transition:all 0.15s ease;
-        }
-        .lp-btn-ghost{
-          background:transparent;color:#555;border:1px solid #e5e5e5;
-        }
-        .lp-btn-ghost:hover{background:#f9f9f9;border-color:#d0d0d0;}
-        .lp-btn-fill{
-          background:var(--brand,#d59567);color:#fff;
-        }
-        .lp-btn-fill:hover{opacity:0.9;transform:translateY(-1px);}
-        .lp-btn-lg{padding:14px 28px;font-size:15px;border-radius:12px;}
-
-        /* HERO */
-        .lp-hero{
-          min-height:90vh;display:flex;flex-direction:column;
-          align-items:center;justify-content:center;text-align:center;
-          padding:120px 24px 80px;
-          position:relative;
-          overflow:hidden;
-          background:linear-gradient(180deg,#fff 0%,#fdfaf7 100%);
-        }
-        .lp-badge{
-          display:inline-flex;align-items:center;gap:6px;
-          padding:7px 16px;border-radius:999px;
-          background:#fdf5ef;border:1px solid #f0ddd0;
-          color:var(--brand,#d59567);font-size:13px;font-weight:700;
-          margin-bottom:24px;
-        }
-        .lp-hero h1{
-          font-size:clamp(36px,7vw,64px);font-weight:900;
-          line-height:1.1;letter-spacing:-0.04em;margin:0;max-width:650px;
-        }
-        .lp-hero h1 em{
-          font-style:normal;color:var(--brand,#d59567);
-        }
-        .lp-hero-sub{
-          margin-top:20px;font-size:17px;line-height:1.7;
-          color:#666;max-width:500px;
-        }
-        .lp-hero-actions{
-          margin-top:32px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center;
+        /* MODERN EDITORIAL SPLIT LANDING PAGE SYSTEM */
+        .rn-landing {
+          min-height: 100vh;
+          background: #f8fafc;
+          color: #0f172a;
+          font-family: var(--font-primary, ui-sans-serif, system-ui, -apple-system, sans-serif);
+          overflow-x: hidden;
         }
 
-        /* FEATURES */
-        .lp-section{
-          padding:80px 24px;max-width:1000px;margin:0 auto;
-          position:relative;
+        /* Top Bar Navigation */
+        .rn-nav {
+          position: sticky;
+          top: 0;
+          z-index: 100;
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border-bottom: 1px solid #e2e8f0;
+          padding: 14px 28px;
         }
-        .lp-section--features{
-          background:#f9f7f5;
-          max-width:100%;padding:80px 24px;
+        .rn-nav-container {
+          max-width: 1280px;
+          margin: 0 auto;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
         }
-        .lp-section--features .lp-section-inner{
-          max-width:1000px;margin:0 auto;
+        .rn-logo-img {
+          height: 38px;
+          width: auto;
+          object-fit: contain;
         }
-        .lp-section--pricing{
-          background:#ffffff;
-          max-width:100%;padding:80px 24px;
+        .rn-nav-links {
+          display: flex;
+          align-items: center;
+          gap: 28px;
         }
-        .lp-section--pricing .lp-section-inner{
-          max-width:1000px;margin:0 auto;
+        .rn-nav-link {
+          color: #475569;
+          font-size: 14px;
+          font-weight: 700;
+          text-decoration: none;
+          transition: color 0.2s ease;
         }
-        .lp-section-title{
-          text-align:center;font-size:30px;font-weight:900;
-          letter-spacing:-0.02em;margin:0 0 12px;
-        }
-        .lp-section-sub{
-          text-align:center;color:#666;font-size:15px;margin:0 0 48px;
-        }
-        .lp-features-grid{
-          display:grid;grid-template-columns:repeat(3,1fr);gap:20px;
-        }
-        @media(max-width:768px){
-          .lp-features-grid{grid-template-columns:1fr;}
-        }
-        .lp-feature-card{
-          padding:24px;border-radius:16px;
-          border:1px solid #f0f0f0;background:#fafafa;
-          transition:all 0.2s ease;
-        }
-        .lp-feature-card:hover{
-          border-color:#e0d5cc;background:#fdf8f4;transform:translateY(-2px);
-          box-shadow:0 8px 24px rgba(0,0,0,0.04);
-        }
-        .lp-feature-icon{
-          width:42px;height:42px;border-radius:10px;
-          background:#fdf5ef;display:grid;place-items:center;
-          font-size:20px;margin-bottom:14px;
-        }
-        .lp-feature-card h3{font-size:15px;font-weight:800;margin:0 0 6px;}
-        .lp-feature-card p{font-size:13px;line-height:1.6;color:#777;margin:0;}
-
-        /* PRICING */
-        .lp-pricing-toggle{
-          display:flex;align-items:center;justify-content:center;gap:12px;
-          margin-bottom:32px;
-        }
-        .lp-pricing-toggle-label{
-          font-size:14px;font-weight:600;color:#888;
-          transition:color 0.2s ease;
-        }
-        .lp-pricing-toggle-label.active{color:#1a1a1a;}
-        .lp-pricing-toggle-switch{
-          position:relative;width:52px;height:28px;
-          background:#e5e7eb;border-radius:999px;cursor:pointer;
-          transition:background 0.2s ease;border:none;padding:0;
-        }
-        .lp-pricing-toggle-switch.yearly{background:var(--brand,#d59567);}
-        .lp-pricing-toggle-switch::after{
-          content:"";position:absolute;top:3px;left:3px;
-          width:22px;height:22px;border-radius:50%;
-          background:#fff;transition:transform 0.2s ease;
-          box-shadow:0 1px 3px rgba(0,0,0,0.15);
-        }
-        .lp-pricing-toggle-switch.yearly::after{transform:translateX(24px);}
-        .lp-pricing-save-badge{
-          display:inline-block;padding:3px 8px;border-radius:999px;
-          background:#ecfdf5;color:#059669;font-size:11px;font-weight:700;
-          margin-left:4px;
-        }
-        .lp-pricing-grid{
-          display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:start;
-        }
-        @media(max-width:860px){
-          .lp-pricing-grid{grid-template-columns:1fr;}
-        }
-        .lp-price-card{
-          padding:28px 24px;border-radius:18px;
-          border:1px solid #f0f0f0;background:#fff;
-          transition:all 0.2s ease;
-        }
-        .lp-price-card.highlighted{
-          border-color:var(--brand,#d59567);
-          box-shadow:0 12px 36px rgba(213,149,103,0.12);
-          position:relative;
-        }
-        .lp-price-card.highlighted::before{
-          content:"Populer";position:absolute;top:-12px;left:50%;transform:translateX(-50%);
-          background:var(--brand,#d59567);color:#fff;font-size:11px;font-weight:800;
-          padding:4px 12px;border-radius:999px;
-        }
-        .lp-price-name{font-size:18px;font-weight:800;margin-bottom:4px;}
-        .lp-price-desc{font-size:13px;color:#888;margin-bottom:16px;}
-        .lp-price-amount{font-size:36px;font-weight:900;line-height:1;}
-        .lp-price-period{font-size:14px;color:#888;font-weight:500;}
-        .lp-price-features{
-          margin-top:20px;display:grid;gap:10px;
-          padding-top:20px;border-top:1px solid #f0f0f0;
-        }
-        .lp-price-feat{
-          font-size:13px;color:#555;display:flex;align-items:center;gap:8px;
-        }
-        .lp-price-feat::before{
-          content:"✓";color:var(--brand,#d59567);font-weight:900;font-size:14px;
-        }
-        .lp-price-card .lp-btn{width:100%;margin-top:20px;text-align:center;}
-
-        /* CTA */
-        .lp-cta{padding:60px 24px 80px;text-align:center;background:#faf8f6;}
-        .lp-cta-box{
-          max-width:540px;margin:0 auto;padding:48px 32px;border-radius:24px;
-          background:linear-gradient(135deg,#fdf5ef,#f8ece0);border:1px solid #e8d5c4;
-          position:relative;overflow:hidden;
-        }
-        .lp-cta-box::before{
-          content:"";position:absolute;top:-30px;right:-30px;
-          width:150px;height:150px;border-radius:50%;
-          background:rgba(213,149,103,0.1);pointer-events:none;
-        }
-        .lp-cta-box::after{
-          content:"";position:absolute;bottom:-20px;left:-20px;
-          width:100px;height:100px;border-radius:50%;
-          background:rgba(180,140,100,0.08);pointer-events:none;
-        }
-        .lp-cta-box h2{font-size:26px;font-weight:900;letter-spacing:-0.02em;margin:0 0 10px;}
-        .lp-cta-box p{color:#666;font-size:15px;line-height:1.6;margin:0 0 24px;}
-
-        /* FOOTER */
-        .lp-footer{
-          padding:24px;text-align:center;color:#aaa;font-size:12px;
-          border-top:1px solid #f5f5f5;
+        .rn-nav-link:hover {
+          color: var(--brand, #d59567);
         }
 
-        @media(max-width:640px){
-          .lp-nav{padding:12px 16px;}
-          .lp-hero{padding:100px 16px 60px;}
-          .lp-section{padding:48px 16px;}
-          .lp-cta{padding:40px 16px 60px;}
+        /* Hero Split Screen Section */
+        .rn-hero-section {
+          padding: 70px 28px 90px;
+          max-width: 1280px;
+          margin: 0 auto;
+          display: grid;
+          grid-template-columns: 1fr 1.05fr;
+          gap: 50px;
+          align-items: center;
+        }
+        @media (max-width: 1024px) {
+          .rn-hero-section {
+            grid-template-columns: 1fr;
+            padding: 40px 20px 60px;
+            gap: 40px;
+          }
+        }
+        .rn-hero-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 16px;
+          border-radius: 999px;
+          background: rgba(213, 149, 103, 0.12);
+          border: 1px solid rgba(213, 149, 103, 0.3);
+          color: var(--brand, #d59567);
+          font-size: 13px;
+          font-weight: 800;
+          margin-bottom: 20px;
+        }
+        .rn-hero-title {
+          font-size: 52px;
+          font-weight: 900;
+          line-height: 1.12;
+          letter-spacing: -0.04em;
+          color: #0f172a;
+          margin-bottom: 20px;
+        }
+        @media (max-width: 640px) {
+          .rn-hero-title { font-size: 36px; }
+        }
+        .rn-hero-title em {
+          font-style: normal;
+          background: linear-gradient(135deg, #0f172a 0%, var(--brand, #d59567) 50%, #9a0002 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        .rn-hero-sub {
+          font-size: 17px;
+          color: #475569;
+          line-height: 1.6;
+          margin-bottom: 32px;
+          max-width: 540px;
+        }
+        .rn-hero-btns {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          flex-wrap: wrap;
+          margin-bottom: 36px;
+        }
+
+        .btn-rn-primary {
+          padding: 14px 30px;
+          border-radius: 16px;
+          background: linear-gradient(135deg, var(--brand, #d59567) 0%, #9a0002 100%);
+          color: #ffffff;
+          font-weight: 900;
+          font-size: 15px;
+          border: none;
+          cursor: pointer;
+          box-shadow: 0 10px 25px rgba(154, 0, 2, 0.25);
+          transition: all 0.2s ease;
+        }
+        .btn-rn-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 14px 30px rgba(154, 0, 2, 0.35);
+        }
+        .btn-rn-secondary {
+          padding: 14px 28px;
+          border-radius: 16px;
+          background: #ffffff;
+          color: #0f172a;
+          font-weight: 800;
+          font-size: 15px;
+          border: 1px solid #cbd5e1;
+          cursor: pointer;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+          transition: all 0.2s ease;
+        }
+        .btn-rn-secondary:hover {
+          background: #f1f5f9;
+          border-color: var(--brand, #d59567);
+          transform: translateY(-2px);
+        }
+
+        .rn-trust-proof {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          padding-top: 20px;
+          border-top: 1px dashed #cbd5e1;
+        }
+        .rn-avatar-group {
+          display: flex;
+        }
+        .rn-avatar-circle {
+          width: 34px;
+          height: 34px;
+          border-radius: 50%;
+          border: 2px solid #ffffff;
+          margin-left: -10px;
+          background: var(--brand, #d59567);
+          color: #fff;
+          font-size: 12px;
+          font-weight: 900;
+          display: grid;
+          place-items: center;
+        }
+        .rn-avatar-circle:first-child { margin-left: 0; }
+
+        /* Right Column Showcase Card */
+        .rn-showcase-card {
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 32px;
+          padding: 24px;
+          box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+          position: relative;
+        }
+        .rn-showcase-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding-bottom: 16px;
+          border-bottom: 1px solid #f1f5f9;
+          margin-bottom: 20px;
+        }
+        .rn-tab-pill {
+          padding: 8px 16px;
+          border-radius: 12px;
+          font-size: 13px;
+          font-weight: 800;
+          border: 1px solid transparent;
+          background: #f1f5f9;
+          color: #64748b;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .rn-tab-pill.active {
+          background: rgba(213, 149, 103, 0.15);
+          color: var(--brand, #d59567);
+          border-color: rgba(213, 149, 103, 0.4);
+        }
+
+        /* Key Metrics Row (4 Cards) */
+        .rn-metrics-strip {
+          background: #ffffff;
+          border-y: 1px solid #e2e8f0;
+          padding: 40px 28px;
+        }
+        .rn-metrics-grid {
+          max-width: 1280px;
+          margin: 0 auto;
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 24px;
+        }
+        @media (max-width: 900px) {
+          .rn-metrics-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 480px) {
+          .rn-metrics-grid { grid-template-columns: 1fr; }
+        }
+        .rn-metric-item {
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 20px;
+          padding: 24px;
+          text-align: center;
+        }
+        .rn-metric-val {
+          font-size: 36px;
+          font-weight: 900;
+          color: var(--brand, #d59567);
+          font-family: monospace;
+          margin-bottom: 6px;
+        }
+        .rn-metric-lbl {
+          font-size: 13px;
+          font-weight: 700;
+          color: #64748b;
+        }
+
+        /* Calculator Section */
+        .rn-calc-section {
+          padding: 90px 28px;
+          max-width: 1100px;
+          margin: 0 auto;
+        }
+        .rn-calc-card {
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 32px;
+          padding: 40px;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
+          display: grid;
+          grid-template-columns: 1.1fr 1fr;
+          gap: 40px;
+        }
+        @media (max-width: 860px) {
+          .rn-calc-card { grid-template-columns: 1fr; padding: 28px; }
+        }
+
+        /* Feature Stories (Zig-Zag) */
+        .rn-zigzag-section {
+          padding: 90px 28px;
+          max-width: 1280px;
+          margin: 0 auto;
+        }
+        .rn-zigzag-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 60px;
+          align-items: center;
+          margin-bottom: 80px;
+        }
+        @media (max-width: 900px) {
+          .rn-zigzag-row { grid-template-columns: 1fr; gap: 30px; }
+          .rn-zigzag-row.reverse { display: flex; flex-direction: column-reverse; }
+        }
+        .rn-zigzag-card {
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 28px;
+          padding: 32px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Testimonials */
+        .rn-testimonials-section {
+          background: #ffffff;
+          padding: 90px 28px;
+          border-t: 1px solid #e2e8f0;
+        }
+        .rn-testi-grid {
+          max-width: 1280px;
+          margin: 0 auto;
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 24px;
+        }
+        @media (max-width: 900px) {
+          .rn-testi-grid { grid-template-columns: 1fr; }
+        }
+        .rn-testi-card {
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 24px;
+          padding: 28px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        }
+
+        /* FAQ Accordion */
+        .rn-faq-section {
+          padding: 90px 28px;
+          max-width: 840px;
+          margin: 0 auto;
+        }
+        .rn-faq-item {
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 20px;
+          margin-bottom: 14px;
+          overflow: hidden;
+          transition: all 0.2s ease;
+        }
+        .rn-faq-header {
+          padding: 20px 24px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          font-weight: 800;
+          font-size: 16px;
+          color: #0f172a;
+          cursor: pointer;
+        }
+        .rn-faq-body {
+          padding: 0 24px 20px;
+          color: #475569;
+          font-size: 14px;
+          line-height: 1.6;
+        }
+
+        /* Bottom Banner & Footer */
+        .rn-cta-banner {
+          background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+          color: #ffffff;
+          padding: 70px 28px;
+          text-align: center;
+        }
+        .rn-footer {
+          background: #0f172a;
+          color: #94a3b8;
+          padding: 40px 28px;
+          text-align: center;
+          font-size: 14px;
+          border-top: 1px solid #1e293b;
         }
       `}</style>
 
-      <div className="lp">
-        {/* ANIMATED FLOATING BACKGROUND ELEMENTS */}
-        <div className="lp-bg-elements" aria-hidden="true">
-          {/* Leaves */}
-          {[
-            {t:8,l:5,s:28,d:18,r:-20},{t:15,l:85,s:22,d:22,r:15},{t:35,l:3,s:24,d:25,r:30},
-            {t:55,l:90,s:20,d:19,r:-10},{t:72,l:8,s:26,d:23,r:45},{t:88,l:75,s:18,d:21,r:-35},
-            {t:25,l:92,s:16,d:27,r:20},{t:45,l:12,s:20,d:20,r:-25},{t:65,l:95,s:22,d:24,r:10},
-            {t:5,l:45,s:18,d:26,r:-15},{t:78,l:40,s:14,d:22,r:35},{t:92,l:20,s:20,d:19,r:-40},
-          ].map((p, i) => (
-            <svg key={`leaf-${i}`} className="lp-float lp-float--leaf" viewBox="0 0 40 60"
-              style={{top:`${p.t}%`,left:`${p.l}%`,width:p.s,opacity:0.09+(i%3)*0.02,
-                      animationDuration:`${p.d}s`,transform:`rotate(${p.r}deg)`,animationDelay:`${i*-1.5}s`}}>
-              <path d="M20 3c-10 12-16 32-12 50 0 0 5-3 10-14s7-24 7-32c0-2-1-4-5-4z" fill="#7a9e5a"/>
-              <path d="M20 6c0 18-3 35-7 48" stroke="#5c7a42" strokeWidth="0.8" fill="none"/>
-            </svg>
-          ))}
-          {/* Rocks / Pebbles */}
-          {[
-            {t:90,l:80,s:50,d:28},{t:85,l:10,s:40,d:32},{t:70,l:60,s:35,d:26},
-            {t:20,l:75,s:30,d:30},{t:50,l:2,s:45,d:24},{t:95,l:50,s:38,d:29},
-            {t:30,l:88,s:28,d:27},{t:60,l:15,s:32,d:31},{t:10,l:30,s:25,d:25},
-          ].map((p, i) => (
-            <svg key={`rock-${i}`} className="lp-float lp-float--rock" viewBox="0 0 60 40"
-              style={{top:`${p.t}%`,left:`${p.l}%`,width:p.s,opacity:0.06+(i%3)*0.015,
-                      animationDuration:`${p.d}s`,animationDelay:`${i*-2}s`}}>
-              <ellipse cx="30" cy="24" rx={22-i%5} ry={12-i%3} fill="#9e8b6e"/>
-              <ellipse cx={25+i%8} cy={22} rx={14-i%4} ry={8-i%2} fill="#b3a084"/>
-            </svg>
-          ))}
-          {/* Trees */}
-          {[
-            {t:20,l:96,s:55,d:35},{t:40,l:-1,s:48,d:32},{t:75,l:93,s:42,d:28},
-          ].map((p, i) => (
-            <svg key={`tree-${i}`} className="lp-float lp-float--tree" viewBox="0 0 60 120"
-              style={{top:`${p.t}%`,left:`${p.l}%`,width:p.s,opacity:0.04+i*0.01,
-                      animationDuration:`${p.d}s`,animationDelay:`${i*-4}s`}}>
-              <rect x="27" y="70" width="6" height="45" rx="2" fill="#6b5840"/>
-              <ellipse cx="30" cy="42" rx="24" ry="35" fill="#6b8f4a"/>
-              <ellipse cx="27" cy="32" rx="16" ry="24" fill="#7da35a"/>
-            </svg>
-          ))}
-        </div>
+      <div className="rn-landing">
+        {/* Top Sticky Navigation */}
+        <nav className="rn-nav">
+          <div className="rn-nav-container">
+            <img src="/logo-header.png" alt="RuniX POS" className="rn-logo-img" />
 
-        {/* NAV */}
-        <nav className="lp-nav">
-          <div className="lp-logo">terra<span>POS</span></div>
-          <div className="lp-nav-btns">
-            <button className="lp-btn lp-btn-ghost" onClick={() => r.push("/login")}>
-              Masuk
-            </button>
-            <button className="lp-btn lp-btn-fill" onClick={() => r.push("/setup")}>
-              Daftar Gratis
-            </button>
+            <div className="rn-nav-links">
+              <a href="#solusi" className="rn-nav-link">Fitur Solusi</a>
+              <a href="#kalkulator" className="rn-nav-link">Kalkulator Profit</a>
+              <a href="#harga" className="rn-nav-link">Paket Harga</a>
+              <a href="#testimoni" className="rn-nav-link">Testimoni</a>
+              <a href="#faq" className="rn-nav-link">FAQ</a>
+              <button className="btn-rn-secondary" style={{ padding: "8px 18px", fontSize: 13 }} onClick={() => r.push("/login")}>
+                Masuk Kasir
+              </button>
+              <button className="btn-rn-primary" style={{ padding: "8px 18px", fontSize: 13 }} onClick={() => r.push("/setup")}>
+                Daftar Outlet
+              </button>
+            </div>
           </div>
         </nav>
 
-        {/* HERO */}
-        <section className="lp-hero">
-          <div className="lp-badge">{hero.badge}</div>
-          <h1>
-            {hero.headline} <em>{hero.headlineHighlight}</em>
-          </h1>
-          <p className="lp-hero-sub">{hero.subtitle}</p>
-          <div className="lp-hero-actions">
-            <button className="lp-btn lp-btn-fill lp-btn-lg" onClick={() => r.push("/setup")}>
-              {hero.ctaPrimary}
-            </button>
-            <button className="lp-btn lp-btn-ghost lp-btn-lg" onClick={() => r.push("/login")}>
-              {hero.ctaSecondary}
-            </button>
-          </div>
-        </section>
+        {/* SECTION 1: Split Screen Hero */}
+        <section className="rn-hero-section">
+          <div>
+            <div className="rn-hero-badge">
+              ⚡ POS Kasir Hibrid Multi-Tenant Terdepan
+            </div>
+            <h1 className="rn-hero-title">
+              Sistem Kasir Warkop & Kafe Yang <em>Cepat, Akurat, & Bebas Ribet</em>
+            </h1>
+            <p className="rn-hero-sub">
+              Didesain khusus untuk mempercepat antrean transaksi kasir, otomatisasi rekap stok bahan baku, dan pemantauan omset bisnis Anda kapan saja & di mana saja.
+            </p>
 
-        {/* FEATURES */}
-        <section className="lp-section--features" id="fitur">
-          <div className="lp-section-inner">
-            <h2 className="lp-section-title">{featuresTitle}</h2>
-            <div className="lp-features-grid">
-              {features.map((f, i) => (
-                <div key={i} className="lp-feature-card">
-                  <div className="lp-feature-icon">{f.icon}</div>
-                  <h3>{f.title}</h3>
-                  <p>{f.description}</p>
+            <div className="rn-hero-btns">
+              <button className="btn-rn-primary" onClick={() => r.push("/setup")}>
+                🚀 Mulai Registrasi Outlet
+              </button>
+              <button className="btn-rn-secondary" onClick={() => r.push("/login")}>
+                🔑 Masuk Sistem Kasir
+              </button>
+            </div>
+
+            <div className="rn-trust-proof">
+              <div className="rn-avatar-group">
+                <div className="rn-avatar-circle">☕</div>
+                <div className="rn-avatar-circle">🍵</div>
+                <div className="rn-avatar-circle">🥐</div>
+                <div className="rn-avatar-circle">+99</div>
+              </div>
+              <div style={{ fontSize: 13, color: "#64748b", fontWeight: 700 }}>
+                Dipercaya <strong style={{ color: "#0f172a" }}>150+ Warkop & Resto</strong> di Seluruh Indonesia
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column Interactive POS Card */}
+          <div className="rn-showcase-card">
+            <div className="rn-showcase-header">
+              <div style={{ display: "flex", gap: 6 }}>
+                <div className="rn-tab-pill active">📱 Live POS Screen</div>
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: "#10b981", background: "rgba(16, 185, 129, 0.12)", padding: "4px 10px", borderRadius: 999 }}>
+                🟢 Kasir Online Active
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1.2fr", gap: 16 }}>
+              <div style={{ background: "#f8fafc", padding: 16, borderRadius: 16, border: "1px solid #e2e8f0" }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: "var(--brand, #d59567)", marginBottom: 10 }}>
+                  📁 KATALOG MENU KASIR
                 </div>
-              ))}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  <div style={{ background: "#ffffff", padding: 10, borderRadius: 10, border: "1px solid #e2e8f0" }}>
+                    <div style={{ fontSize: 12, fontWeight: 900 }}>Es Kopi Gula Aren</div>
+                    <div style={{ fontSize: 11, color: "var(--brand, #d59567)", fontWeight: 800 }}>Rp 18.000</div>
+                  </div>
+                  <div style={{ background: "#ffffff", padding: 10, borderRadius: 10, border: "1px solid #e2e8f0" }}>
+                    <div style={{ fontSize: 12, fontWeight: 900 }}>Roti Bakar Cokelat</div>
+                    <div style={{ fontSize: 11, color: "var(--brand, #d59567)", fontWeight: 800 }}>Rp 15.000</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ background: "rgba(213, 149, 103, 0.08)", padding: 16, borderRadius: 16, border: "1.5px solid var(--brand, #d59567)" }}>
+                <div style={{ fontSize: 12, fontWeight: 900, color: "#0f172a" }}>🛒 Billing Nota</div>
+                <div style={{ marginTop: 10, fontSize: 11, color: "#475569", display: "flex", justifyContent: "space-between" }}>
+                  <span>1x Kopi Aren</span>
+                  <span>18k</span>
+                </div>
+                <div style={{ marginTop: 20, paddingTop: 8, borderTop: "1px solid #cbd5e1", display: "flex", justifyContent: "space-between", fontWeight: 900, fontSize: 14 }}>
+                  <span>Total</span>
+                  <span style={{ color: "var(--brand, #d59567)" }}>Rp 18.000</span>
+                </div>
+                <button className="btn-rn-primary" style={{ width: "100%", marginTop: 12, padding: "8px", fontSize: 12 }}>
+                  Bayar (Cetak Struk)
+                </button>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* PRICING */}
-        <section className="lp-section--pricing" id="harga">
-          <div className="lp-section-inner">
-            <h2 className="lp-section-title">{pricingTitle}</h2>
-            <p className="lp-section-sub">{pricingSubtitle}</p>
+        {/* SECTION 2: Key Metrics Strip */}
+        <section className="rn-metrics-strip">
+          <div className="rn-metrics-grid">
+            <div className="rn-metric-item">
+              <div className="rn-metric-val">0.1s</div>
+              <div className="rn-metric-lbl">Respon Transaksi Kasir Instan</div>
+            </div>
+            <div className="rn-metric-item">
+              <div className="rn-metric-val">100%</div>
+              <div className="rn-metric-lbl">Dukungan Thermal Bluetooth</div>
+            </div>
+            <div className="rn-metric-item">
+              <div className="rn-metric-val">3x</div>
+              <div className="rn-metric-lbl">Lebih Cepat Dari Pencatatan Manual</div>
+            </div>
+            <div className="rn-metric-item">
+              <div className="rn-metric-val">0%</div>
+              <div className="rn-metric-lbl">Risiko Kebocoran Omset Resto</div>
+            </div>
+          </div>
+        </section>
 
-            {/* Toggle Bulanan / Tahunan */}
-            <div className="lp-pricing-toggle">
-              <span className={`lp-pricing-toggle-label ${billingCycle === "monthly" ? "active" : ""}`}>Bulanan</span>
-              <button
-                className={`lp-pricing-toggle-switch ${billingCycle === "yearly" ? "yearly" : ""}`}
+        {/* SECTION 3: Interactive Profit & Time Saved Calculator */}
+        <section className="rn-calc-section" id="kalkulator">
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <h2 style={{ fontSize: 36, fontWeight: 900, color: "#0f172a" }}>Hitung Potensi Efisiensi Warkop Anda</h2>
+            <p style={{ fontSize: 15, color: "#64748b", marginTop: 8 }}>Simulasi penghematan waktu dan perlindungan omset harian bersama RuniX POS.</p>
+          </div>
+
+          <div className="rn-calc-card">
+            <div>
+              <div style={{ marginBottom: 24 }}>
+                <label style={{ fontSize: 13, fontWeight: 800, color: "#0f172a", display: "block", marginBottom: 8 }}>
+                  Jumlah Transaksi Harian: <span style={{ color: "var(--brand, #d59567)" }}>{dailyOrders} Pesanan/hari</span>
+                </label>
+                <input
+                  type="range"
+                  min="10"
+                  max="300"
+                  value={dailyOrders}
+                  onChange={(e) => setDailyOrders(Number(e.target.value))}
+                  style={{ width: "100%", accentColor: "var(--brand, #d59567)" }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 800, color: "#0f172a", display: "block", marginBottom: 8 }}>
+                  Rata-rata Nilai Transaksi: <span style={{ color: "var(--brand, #d59567)" }}>Rp {avgTicketPrice.toLocaleString("id-ID")}</span>
+                </label>
+                <input
+                  type="range"
+                  min="10000"
+                  max="150000"
+                  step="5000"
+                  value={avgTicketPrice}
+                  onChange={(e) => setAvgTicketPrice(Number(e.target.value))}
+                  style={{ width: "100%", accentColor: "var(--brand, #d59567)" }}
+                />
+              </div>
+            </div>
+
+            <div style={{ background: "#f8fafc", padding: 24, borderRadius: 20, border: "1px solid #e2e8f0", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 12, color: "#64748b", fontWeight: 700 }}>Estimasi Omset Bulanan:</div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: "#0f172a", fontFamily: "monospace" }}>
+                  Rp {monthlyRevenue.toLocaleString("id-ID")}
+                </div>
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 12, color: "#64748b", fontWeight: 700 }}>Waktu Operasional Dihemat:</div>
+                <div style={{ fontSize: 20, fontWeight: 900, color: "#10b981" }}>
+                  ⏱️ ~{estimatedTimeSavedHours} Jam / Bulan
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 12, color: "#64748b", fontWeight: 700 }}>Potensi Mencegah Kebocoran Stok:</div>
+                <div style={{ fontSize: 20, fontWeight: 900, color: "var(--brand, #d59567)", fontFamily: "monospace" }}>
+                  🛡️ Rp {estimatedLeakagePrevented.toLocaleString("id-ID")} / bulan
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 4: Zig-Zag Asymmetric Features */}
+        <section className="rn-zigzag-section" id="solusi">
+          <div className="rn-zigzag-row">
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 900, color: "var(--brand, #d59567)", marginBottom: 8 }}>01. PEMROSESAN TRANSAKSI CANGGIH</div>
+              <h2 style={{ fontSize: 34, fontWeight: 900, color: "#0f172a", marginBottom: 16 }}>Kasir Kilat Tanpa Hambatan Antrean</h2>
+              <p style={{ fontSize: 15, color: "#475569", lineHeight: 1.6 }}>
+                Antarmuka kasir didesain khusus agar penginputan pesanan dapat dilakukan dalam hitungan detik. Mendukung cetak struk otomatis dan integrasi dapur.
+              </p>
+            </div>
+            <div className="rn-zigzag-card">
+              <div style={{ fontSize: 14, fontWeight: 900, color: "#0f172a", marginBottom: 12 }}>⚡ Keunggulan Modul Kasir:</div>
+              <ul style={{ paddingLeft: 20, color: "#475569", fontSize: 14, display: "grid", gap: 10 }}>
+                <li>Pencarian produk instan dengan dukungan filter kategori menu.</li>
+                <li>Mendukung varian topping, kustom tingkat manis & es.</li>
+                <li>Pilihan pembayaran Cash, QRIS, & Transfer Instan.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="rn-zigzag-row reverse">
+            <div className="rn-zigzag-card">
+              <div style={{ fontSize: 14, fontWeight: 900, color: "#0f172a", marginBottom: 12 }}>📊 Keunggulan Laporan Analytics:</div>
+              <ul style={{ paddingLeft: 20, color: "#475569", fontSize: 14, display: "grid", gap: 10 }}>
+                <li>Kalkulator HPP & Laba Bersih otomatis setiap hari.</li>
+                <li>Rekap laporan shift kasir tanpa selisih kas.</li>
+                <li>Grafik jam teramai penjualan resto/warkop.</li>
+              </ul>
+            </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 900, color: "var(--brand, #d59567)", marginBottom: 8 }}>02. LAPORAN & KALKULASI AUTOMATIS</div>
+              <h2 style={{ fontSize: 34, fontWeight: 900, color: "#0f172a", marginBottom: 16 }}>Pantau Omset Real-time Kapan Saja</h2>
+              <p style={{ fontSize: 15, color: "#475569", lineHeight: 1.6 }}>
+                Dapatkan rekapitulasi penjualan harian, mingguan, hingga bulanan secara transparan. Tahu persis keuntungan bersih bisnis Anda.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 4.5: Interactive Modular Slider & Pricing Matrix */}
+        <section className="rn-calc-section" id="harga" style={{ paddingTop: 60, paddingBottom: 60 }}>
+          <div style={{ textAlign: "center", marginBottom: 45 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 14px", borderRadius: 999, background: "rgba(213, 149, 103, 0.12)", color: "var(--brand, #d59567)", fontSize: 13, fontWeight: 900, marginBottom: 12 }}>
+              💎 PILIHAN PAKET BERGANSI TANPA KOMISI
+            </div>
+            <h2 style={{ fontSize: 38, fontWeight: 900, color: "#0f172a" }}>Paket Harga Transparan Sesuai Skala Usaha</h2>
+            <p style={{ fontSize: 15, color: "#64748b", marginTop: 8 }}>Pilih paket tetap atau gunakan kalkulator kustom perangkat di bawah ini.</p>
+
+            {/* Toggle Billing Cycle */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, marginTop: 24 }}>
+              <span style={{ fontSize: 14, fontWeight: 800, color: billingCycle === "monthly" ? "#0f172a" : "#94a3b8" }}>Billing Bulanan</span>
+              <div
                 onClick={() => setBillingCycle(billingCycle === "monthly" ? "yearly" : "monthly")}
-                aria-label="Toggle billing cycle"
-              />
-              <span className={`lp-pricing-toggle-label ${billingCycle === "yearly" ? "active" : ""}`}>
-                Tahunan
-                <span className="lp-pricing-save-badge">Hemat</span>
+                style={{
+                  width: 54,
+                  height: 28,
+                  borderRadius: 999,
+                  background: billingCycle === "yearly" ? "var(--brand, #d59567)" : "#cbd5e1",
+                  padding: 3,
+                  cursor: "pointer",
+                  transition: "all 0.25s ease",
+                  display: "flex",
+                  alignItems: "center"
+                }}
+              >
+                <div style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: "50%",
+                  background: "#ffffff",
+                  transform: billingCycle === "yearly" ? "translateX(26px)" : "translateX(0)",
+                  transition: "transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+                }} />
+              </div>
+              <span style={{ fontSize: 14, fontWeight: 800, color: billingCycle === "yearly" ? "#0f172a" : "#94a3b8" }}>
+                Billing Tahunan <span style={{ background: "rgba(16, 185, 129, 0.15)", color: "#10b981", padding: "2px 8px", borderRadius: 999, fontSize: 11, fontWeight: 900 }}>Hemat 20%</span>
               </span>
             </div>
+          </div>
 
-            <div className="lp-pricing-grid">
-              {pricing.map((plan, i) => {
-                const displayPrice = billingCycle === "yearly" ? (plan.yearlyPrice || plan.price) : plan.price;
-                const displayPeriod = billingCycle === "yearly" ? (plan.yearlyPeriod || plan.period) : plan.period;
+          {/* 3 Main Pricing Cards (Delta, Omega, Zeta) */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(310px, 1fr))", gap: 24, marginBottom: 36 }}>
+            {/* Tier 1: Delta */}
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 28, padding: 32, display: "flex", flexDirection: "column", boxShadow: "0 4px 20px rgba(0,0,0,0.03)" }}>
+              <div style={{ fontSize: 22, fontWeight: 900, color: "#0f172a", marginBottom: 6 }}>☕ Delta</div>
+              <div style={{ fontSize: 13, color: "#64748b", marginBottom: 20 }}>Cocok untuk kedai kopi & warkop skala 1 kasir utama.</div>
 
-                const handleCtaClick = () => {
-                  const link = plan.ctaLink || "/setup";
-                  if (link.startsWith("http://") || link.startsWith("https://")) {
-                    window.open(link, "_blank", "noopener,noreferrer");
-                  } else {
-                    r.push(link);
-                  }
-                };
+              <div style={{ marginBottom: 24 }}>
+                <span style={{ fontSize: 36, fontWeight: 900, color: "var(--brand, #d59567)", fontFamily: "monospace" }}>
+                  Rp {billingCycle === "yearly" ? "69.000" : "89.000"}
+                </span>
+                <span style={{ fontSize: 13, color: "#64748b", marginLeft: 6 }}>/ bulan</span>
+              </div>
 
-                return (
-                  <div key={i} className={`lp-price-card ${plan.highlighted ? "highlighted" : ""}`}>
-                    <div className="lp-price-name">{plan.name}</div>
-                    <div className="lp-price-desc">{plan.description}</div>
-                    <div>
-                      <span className="lp-price-amount">{displayPrice}</span>
-                      {displayPeriod && <span className="lp-price-period">{displayPeriod}</span>}
-                    </div>
-                    <div className="lp-price-features">
-                      {plan.features.map((feat, j) => (
-                        <div key={j} className="lp-price-feat">{feat}</div>
-                      ))}
-                    </div>
-                    <button
-                      className={`lp-btn ${plan.highlighted ? "lp-btn-fill" : "lp-btn-ghost"}`}
-                      onClick={handleCtaClick}
-                    >
-                      {plan.ctaText}
-                    </button>
-                  </div>
-                );
-              })}
+              <div style={{ display: "grid", gap: 12, marginBottom: 28, flex: 1 }}>
+                <div style={{ fontSize: 13, color: "#334155", display: "flex", gap: 8 }}>
+                  <span style={{ color: "#10b981", fontWeight: 900 }}>✓</span> 1 Lisensi Kasir POS Utama
+                </div>
+                <div style={{ fontSize: 13, color: "#334155", display: "flex", gap: 8 }}>
+                  <span style={{ color: "#10b981", fontWeight: 900 }}>✓</span> Cetak Struk Bluetooth Thermal
+                </div>
+                <div style={{ fontSize: 13, color: "#334155", display: "flex", gap: 8 }}>
+                  <span style={{ color: "#10b981", fontWeight: 900 }}>✓</span> Rekap Penjualan Shift Kasir
+                </div>
+                <div style={{ fontSize: 13, color: "#334155", display: "flex", gap: 8 }}>
+                  <span style={{ color: "#10b981", fontWeight: 900 }}>✓</span> Mode Kasir Hibrid Offline
+                </div>
+              </div>
+
+              <button className="btn-rn-secondary" style={{ width: "100%", padding: 12 }} onClick={() => r.push("/setup")}>
+                Pilih Paket Delta
+              </button>
+            </div>
+
+            {/* Tier 2: Omega (Popular Highlight) */}
+            <div style={{ background: "#ffffff", border: "2.5px solid var(--brand, #d59567)", borderRadius: 28, padding: 32, display: "flex", flexDirection: "column", position: "relative", boxShadow: "0 15px 40px rgba(213,149,103,0.18)" }}>
+              <div style={{ position: "absolute", top: -14, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg, var(--brand, #d59567) 0%, #9a0002 100%)", color: "#fff", padding: "4px 16px", borderRadius: 999, fontSize: 12, fontWeight: 900 }}>
+                🔥 PALING DIREKOMENDASIKAN
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 900, color: "#0f172a", marginBottom: 6 }}>🍽️ Omega</div>
+              <div style={{ fontSize: 13, color: "#64748b", marginBottom: 20 }}>Untuk kafe & resto dengan layar kasir & layar dapur terpisah.</div>
+
+              <div style={{ marginBottom: 24 }}>
+                <span style={{ fontSize: 36, fontWeight: 900, color: "var(--brand, #d59567)", fontFamily: "monospace" }}>
+                  Rp {billingCycle === "yearly" ? "149.000" : "189.000"}
+                </span>
+                <span style={{ fontSize: 13, color: "#64748b", marginLeft: 6 }}>/ bulan</span>
+              </div>
+
+              <div style={{ display: "grid", gap: 12, marginBottom: 28, flex: 1 }}>
+                <div style={{ fontSize: 13, color: "#334155", display: "flex", gap: 8 }}>
+                  <span style={{ color: "var(--brand, #d59567)", fontWeight: 900 }}>✓</span> <strong>Hingga 3 Lisensi Kasir & Dapur</strong>
+                </div>
+                <div style={{ fontSize: 13, color: "#334155", display: "flex", gap: 8 }}>
+                  <span style={{ color: "var(--brand, #d59567)", fontWeight: 900 }}>✓</span> Kalkulator HPP & Laba Bersih Otomatis
+                </div>
+                <div style={{ fontSize: 13, color: "#334155", display: "flex", gap: 8 }}>
+                  <span style={{ color: "var(--brand, #d59567)", fontWeight: 900 }}>✓</span> Monitor Stok & Low Stock Alert
+                </div>
+                <div style={{ fontSize: 13, color: "#334155", display: "flex", gap: 8 }}>
+                  <span style={{ color: "var(--brand, #d59567)", fontWeight: 900 }}>✓</span> Manajemen PIN Staff & Otorisasi Refund
+                </div>
+              </div>
+
+              <button className="btn-rn-primary" style={{ width: "100%", padding: 12 }} onClick={() => r.push("/setup")}>
+                Pilih Paket Omega
+              </button>
+            </div>
+
+            {/* Tier 3: Zeta */}
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 28, padding: 32, display: "flex", flexDirection: "column", boxShadow: "0 4px 20px rgba(0,0,0,0.03)" }}>
+              <div style={{ fontSize: 22, fontWeight: 900, color: "#0f172a", marginBottom: 6 }}>🏢 Zeta</div>
+              <div style={{ fontSize: 13, color: "#64748b", marginBottom: 20 }}>Solusi franchise & jaringan cabang resto multi-tenant.</div>
+
+              <div style={{ marginBottom: 24 }}>
+                <span style={{ fontSize: 36, fontWeight: 900, color: "var(--brand, #d59567)", fontFamily: "monospace" }}>
+                  Rp {billingCycle === "yearly" ? "299.000" : "369.000"}
+                </span>
+                <span style={{ fontSize: 13, color: "#64748b", marginLeft: 6 }}>/ bulan</span>
+              </div>
+
+              <div style={{ display: "grid", gap: 12, marginBottom: 28, flex: 1 }}>
+                <div style={{ fontSize: 13, color: "#334155", display: "flex", gap: 8 }}>
+                  <span style={{ color: "#10b981", fontWeight: 900 }}>✓</span> Unlimited Kasir & Perangkat Dapur
+                </div>
+                <div style={{ fontSize: 13, color: "#334155", display: "flex", gap: 8 }}>
+                  <span style={{ color: "#10b981", fontWeight: 900 }}>✓</span> Laporan Konsolidasi Multi-Cabang
+                </div>
+                <div style={{ fontSize: 13, color: "#334155", display: "flex", gap: 8 }}>
+                  <span style={{ color: "#10b981", fontWeight: 900 }}>✓</span> Custom Branding Struk & Staging API
+                </div>
+                <div style={{ fontSize: 13, color: "#334155", display: "flex", gap: 8 }}>
+                  <span style={{ color: "#10b981", fontWeight: 900 }}>✓</span> Support Prioritas 24/7 Dedicated Manager
+                </div>
+              </div>
+
+              <button className="btn-rn-secondary" style={{ width: "100%", padding: 12 }} onClick={() => r.push("/setup")}>
+                Pilih Paket Zeta
+              </button>
             </div>
           </div>
-        </section>
 
-        {/* CTA */}
-        <section className="lp-cta">
-          <div className="lp-cta-box">
-            <h2>{ctaTitle}</h2>
-            <p>{ctaSubtitle}</p>
-            <button className="lp-btn lp-btn-fill lp-btn-lg" onClick={() => r.push("/setup")}>
-              {hero.ctaPrimary}
+          {/* Custom Contact Us Banner Below Pricing Cards */}
+          <div style={{ background: "#ffffff", border: "1.5px dashed var(--brand, #d59567)", borderRadius: 24, padding: "24px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 20, boxShadow: "0 4px 20px rgba(0,0,0,0.02)" }}>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 900, color: "#0f172a", display: "flex", alignItems: "center", gap: 8 }}>
+                💬 Butuh Fitur Kustom atau Paket Jaringan Cabang Khusus?
+              </div>
+              <div style={{ fontSize: 13, color: "#64748b", marginTop: 4 }}>
+                Tim engineer RuniX siap membantu penyesuaian integrasi POS khusus sesuai alur operasional outlet Anda.
+              </div>
+            </div>
+
+            <button
+              className="btn-rn-primary"
+              style={{ padding: "10px 24px", fontSize: 14, whiteSpace: "nowrap" }}
+              onClick={() => {
+                const msg = encodeURIComponent("Halo Tim RuniX, saya ingin berkonsultasi mengenai paket kustom POS / multi-outlet khusus.");
+                window.open(`https://wa.me/?text=${msg}`, "_blank");
+              }}
+            >
+              Custom?? Hubungi Kami ➔
             </button>
           </div>
         </section>
 
-        {/* FOOTER */}
-        <footer className="lp-footer">
-          <div style={{ marginBottom: 8 }}>
-            <a href="/terms" style={{ color: "#888", textDecoration: "underline", marginRight: 16 }}>Syarat & Ketentuan</a>
-            <a href="/privacy" style={{ color: "#888", textDecoration: "underline" }}>Kebijakan Privasi</a>
+        {/* SECTION 5: Customer Testimonials */}
+        <section className="rn-testimonials-section" id="testimoni">
+          <div style={{ textAlign: "center", marginBottom: 50 }}>
+            <h2 style={{ fontSize: 36, fontWeight: 900, color: "#0f172a" }}>Kata Pengusaha Resto & Warkop</h2>
+            <p style={{ fontSize: 15, color: "#64748b", marginTop: 8 }}>Pengalaman langsung pengguna RuniX POS di lapangan.</p>
           </div>
-          &copy; {new Date().getFullYear()} {footerText}
+
+          <div className="rn-testi-grid">
+            <div className="rn-testi-card">
+              <p style={{ fontSize: 14, color: "#334155", fontStyle: "italic", lineHeight: 1.6 }}>
+                "Sejak pakai RuniX POS, antrean kasir warkop pas jam ramai malam minggu jadi lancar banget. Struk Bluetooth cetak instan tanpa patah-patah!"
+              </p>
+              <div style={{ marginTop: 20, paddingTop: 14, borderTop: "1px solid #e2e8f0" }}>
+                <div style={{ fontWeight: 900, fontSize: 14, color: "#0f172a" }}>Mas Dimas</div>
+                <div style={{ fontSize: 12, color: "#64748b" }}>Owner Warkop Sudut Kopi</div>
+              </div>
+            </div>
+
+            <div className="rn-testi-card">
+              <p style={{ fontSize: 14, color: "#334155", fontStyle: "italic", lineHeight: 1.6 }}>
+                "Fitur laporan omset dan hitungan HPP nya benar-benar membantu saya tahu mana menu terlaris dan berapa margin untung bersih bulanan."
+              </p>
+              <div style={{ marginTop: 20, paddingTop: 14, borderTop: "1px solid #e2e8f0" }}>
+                <div style={{ fontWeight: 900, fontSize: 14, color: "#0f172a" }}>Mbak Rina</div>
+                <div style={{ fontSize: 12, color: "#64748b" }}>Manager Kafe Senja Utama</div>
+              </div>
+            </div>
+
+            <div className="rn-testi-card">
+              <p style={{ fontSize: 14, color: "#334155", fontStyle: "italic", lineHeight: 1.6 }}>
+                "Sistem lock kategori dan edit produk langsung di halaman tanpa popup sangat praktis! Staff baru langsung ngerti cara pakainya."
+              </p>
+              <div style={{ marginTop: 20, paddingTop: 14, borderTop: "1px solid #e2e8f0" }}>
+                <div style={{ fontWeight: 900, fontSize: 14, color: "#0f172a" }}>Ko Hendra</div>
+                <div style={{ fontSize: 12, color: "#64748b" }}>Owner Resto Bento Express</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 6: FAQ Accordion */}
+        <section className="rn-faq-section" id="faq">
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <h2 style={{ fontSize: 36, fontWeight: 900, color: "#0f172a" }}>Pertanyaan Sering Diajukan (FAQ)</h2>
+          </div>
+
+          <div>
+            {faqs.map((faq, idx) => {
+              const isOpen = openFaq === idx;
+              return (
+                <div key={idx} className="rn-faq-item">
+                  <div
+                    className="rn-faq-header"
+                    onClick={() => setOpenFaq(isOpen ? null : idx)}
+                  >
+                    <span>{faq.q}</span>
+                    <span>{isOpen ? "➖" : "➕"}</span>
+                  </div>
+                  {isOpen && <div className="rn-faq-body">{faq.a}</div>}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* SECTION 7: Closing CTA Banner */}
+        <section className="rn-cta-banner">
+          <h2 style={{ fontSize: 38, fontWeight: 900, marginBottom: 12 }}>
+            Siap Tingkatkan Operasional Warkop & Kafe Anda?
+          </h2>
+          <p style={{ fontSize: 16, color: "#cbd5e1", maxWidth: 600, margin: "0 auto 28px" }}>
+            Bergabunglah sekarang dan nikmati kemudahan mengelola kasir tanpa ribet.
+          </p>
+          <button className="btn-rn-primary" style={{ padding: "16px 40px", fontSize: 16 }} onClick={() => r.push("/setup")}>
+            🚀 Registrasi Outlet Sekarang
+          </button>
+        </section>
+
+        {/* Footer */}
+        <footer className="rn-footer">
+          <div style={{ marginBottom: 12 }}>
+            <a href="/terms" style={{ color: "#94a3b8", textDecoration: "underline", marginRight: 20 }}>Syarat & Ketentuan</a>
+            <a href="/privacy" style={{ color: "#94a3b8", textDecoration: "underline" }}>Kebijakan Privasi</a>
+          </div>
+          &copy; {new Date().getFullYear()} {footerText || "RuniX POS. Hak Cipta Dilindungi."}
         </footer>
       </div>
     </main>

@@ -126,104 +126,294 @@ export default function SetupPage() {
     }
   }
 
+  // Partikel melayang berbasis logo favicon
+  const [particles, setParticles] = useState<
+    { id: number; left: number; top: number; size: number; duration: number; delay: number; rotate: number; opacity: number }[]
+  >([]);
+
+  useEffect(() => {
+    // Generate 20 partikel favicon acak
+    const generated = Array.from({ length: 20 }).map((_, i) => ({
+      id: i,
+      left: Math.random() * 95,
+      top: Math.random() * 95,
+      size: Math.floor(Math.random() * 24) + 24,
+      duration: Math.floor(Math.random() * 12) + 14,
+      delay: Math.random() * 6,
+      rotate: Math.floor(Math.random() * 360),
+      opacity: Math.random() * 0.4 + 0.3,
+    }));
+    setParticles(generated);
+  }, []);
+
   if (loading) {
     return (
-      <TerraPage>
-        <div className="card">Loading...</div>
+      <TerraPage maxWidth={540}>
+        <div style={{ minHeight: "85dvh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div className="card" style={{ padding: "20px 32px", borderRadius: 20, fontWeight: 800, color: "var(--brand)" }}>
+            Memuat Daftar Outlet...
+          </div>
+        </div>
       </TerraPage>
     );
   }
 
   return (
-    <TerraPage maxWidth={600}>
+    <TerraPage maxWidth={540}>
       <style>{`
-        .setup-wrap{
-          min-height:80vh;
-          min-height:80dvh;
-          display:grid;
-          place-items:center;
-          padding:16px 0;
+        .auth-wrap {
+          min-height: 85vh;
+          min-height: 85dvh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px 0;
+          position: relative;
         }
-        .tenant-item{
-          border:1px solid var(--border);
-          border-radius:16px;
-          padding:14px;
-          background:var(--bg);
-          transition: border-color 0.2s;
+
+        /* Floating Favicon Particle Layer */
+        .auth-bg-particles {
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          overflow: hidden;
+          z-index: 0;
         }
-        .tenant-item:hover{
+        .auth-favicon-particle {
+          position: absolute;
+          object-fit: contain;
+          filter: blur(2.5px);
+          animation: floatParticle linear infinite;
+          user-select: none;
+          will-change: transform;
+        }
+        @keyframes floatParticle {
+          0% {
+            transform: translateY(0px) rotate(0deg) scale(0.95);
+          }
+          50% {
+            transform: translateY(-28px) rotate(180deg) scale(1.1);
+          }
+          100% {
+            transform: translateY(0px) rotate(360deg) scale(0.95);
+          }
+        }
+
+        .auth-card-v2 {
+          width: 100%;
+          background: var(--panel);
+          border: 1px solid var(--border);
+          border-radius: 32px;
+          padding: 36px 32px;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.06);
+          position: relative;
+          z-index: 1;
+          overflow: hidden;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @media (max-width: 540px) {
+          .auth-card-v2 {
+            padding: 28px 20px;
+            border-radius: 24px;
+          }
+        }
+
+        /* Decorative Background Glows */
+        .auth-glow-1 {
+          position: absolute;
+          top: -60px;
+          right: -60px;
+          width: 180px;
+          height: 180px;
+          border-radius: 50%;
+          background: var(--brand);
+          opacity: 0.08;
+          filter: blur(40px);
+          pointer-events: none;
+        }
+        .auth-glow-2 {
+          position: absolute;
+          bottom: -60px;
+          left: -60px;
+          width: 180px;
+          height: 180px;
+          border-radius: 50%;
+          background: var(--brand);
+          opacity: 0.06;
+          filter: blur(40px);
+          pointer-events: none;
+        }
+
+        /* Header & Brand */
+        .auth-header {
+          text-align: center;
+          margin-bottom: 24px;
+        }
+        .auth-logo-img {
+          height: 44px;
+          width: auto;
+          object-fit: contain;
+          margin: 0 auto 12px;
+          display: block;
+        }
+        .auth-subtitle {
+          font-size: 13px;
+          color: var(--muted);
+          font-weight: 600;
+          line-height: 1.5;
+        }
+
+        /* Outlet List Card Item */
+        .setup-tenant-card {
+          background: var(--brandSoft);
+          border: 1.5px solid var(--border);
+          border-radius: 22px;
+          padding: 16px 20px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .setup-tenant-card:hover {
           border-color: var(--brand);
+          transform: translateY(-3px);
+          box-shadow: 0 8px 24px rgba(154, 0, 2, 0.1);
+          background: var(--panel);
         }
-        .role-badge{
-          display:inline-block;
-          padding:2px 8px;
-          border-radius:4px;
-          font-size:11px;
-          font-weight:700;
-          text-transform:uppercase;
-          background:var(--panel);
-          color:var(--brand);
+        .setup-role-badge {
+          display: inline-flex;
+          align-items: center;
+          padding: 3px 10px;
+          border-radius: 999px;
+          font-size: 10px;
+          font-weight: 900;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          background: rgba(154, 0, 2, 0.12);
+          color: var(--brand);
+          margin-top: 4px;
+        }
+
+        .auth-error-box {
+          margin-bottom: 16px;
+          padding: 12px 16px;
+          border-radius: 14px;
+          background: rgba(239, 68, 68, 0.1);
+          border: 1px solid rgba(239, 68, 68, 0.25);
+          color: #ef4444;
+          font-size: 13px;
+          font-weight: 800;
+          text-align: center;
+        }
+
+        .auth-logout-btn {
+          width: 100%;
+          margin-top: 24px;
+          padding: 13px 20px;
+          border-radius: 18px;
+          font-size: 13px;
+          font-weight: 800;
+          background: rgba(239, 68, 68, 0.1);
+          color: #ef4444;
+          border: 1px solid rgba(239, 68, 68, 0.22);
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .auth-logout-btn:hover {
+          background: rgba(239, 68, 68, 0.2);
+        }
+
+        .auth-footer-note {
+          margin-top: 20px;
+          text-align: center;
+          font-size: 12px;
+          color: var(--muted);
+          font-weight: 600;
         }
       `}</style>
 
-      <div className="setup-wrap">
-        <div style={{ width: "100%" }}>
-          <div className="card">
-            <div className="row">
-              <div>
-                <div className="h1">Pilih Outlet</div>
-                <div className="small" style={{ marginTop: 4 }}>
-                  Login sebagai: <b>{email || "-"}</b>
-                </div>
-              </div>
+      <div className="auth-wrap">
+        {/* Floating Favicon Particle Layer */}
+        <div className="auth-bg-particles">
+          {particles.map((p) => (
+            <img
+              key={p.id}
+              src="/favicon.png"
+              alt="particle"
+              className="auth-favicon-particle"
+              style={{
+                left: `${p.left}%`,
+                top: `${p.top}%`,
+                width: `${p.size}px`,
+                height: `${p.size}px`,
+                opacity: p.opacity,
+                animationDuration: `${p.duration}s`,
+                animationDelay: `${p.delay}s`,
+                transform: `rotate(${p.rotate}deg)`,
+              }}
+            />
+          ))}
+        </div>
 
-              <div className="spacer" />
+        <div className="auth-card-v2">
+          <div className="auth-glow-1" />
+          <div className="auth-glow-2" />
 
-              <button
-                className="btn btn-danger"
-                onClick={() => signOut(auth).then(() => r.push("/login"))}
-              >
-                Logout
-              </button>
+          {/* Header & Logo */}
+          <div className="auth-header">
+            <img src="/logo-header.png" alt="RuniX POS" className="auth-logo-img" />
+            <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text)" }}>
+              Pilih Outlet Operasional
+            </div>
+            <div className="auth-subtitle" style={{ marginTop: 4 }}>
+              Masuk sebagai: <b style={{ color: "var(--brand)" }}>{email || "-"}</b>
             </div>
           </div>
 
-          {err && (
-            <div className="card" style={{ marginTop: 14 }}>
-              <div style={{ color: "var(--danger)", fontWeight: 800 }}>{err}</div>
-            </div>
-          )}
+          {err && <div className="auth-error-box">{err}</div>}
 
-          <div className="card" style={{ marginTop: 14 }}>
-            <div className="card-title">Tenant Saya</div>
-            <div className="card-sub">Pilih outlet untuk masuk.</div>
-
-            <div style={{ marginTop: 14, display: "grid", gap: 12 }}>
-              {tenants.map((t) => (
-                <div key={t.id} className="tenant-item">
-                  <div className="row" style={{ alignItems: "center" }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 900 }}>{t.name}</div>
-                      <div className="small" style={{ marginTop: 4 }}>
-                        <span className="role-badge">{t.role || "member"}</span>
-                      </div>
-                    </div>
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => openTenant(t)}
-                    >
-                      Masuk
-                    </button>
+          {/* List Kartu Outlet */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}>
+            {tenants.map((t) => (
+              <div key={t.id} className="setup-tenant-card">
+                <div>
+                  <div style={{ fontWeight: 900, fontSize: 16, color: "var(--text)" }}>{t.name}</div>
+                  <div>
+                    <span className="setup-role-badge">{t.role || "member"}</span>
                   </div>
                 </div>
-              ))}
+                <button
+                  className="btn btn-primary"
+                  style={{ padding: "10px 20px", borderRadius: 14, fontWeight: 900, fontSize: 13 }}
+                  onClick={() => openTenant(t)}
+                >
+                  Masuk Outlet &rarr;
+                </button>
+              </div>
+            ))}
 
-              {tenants.length === 0 && (
-                <div className="small" style={{ textAlign: "center", padding: 20 }}>
-                  Belum ada outlet yang di-assign. Hubungi admin.
-                </div>
-              )}
-            </div>
+            {tenants.length === 0 && (
+              <div style={{ padding: 24, textAlign: "center", color: "var(--muted)", fontWeight: 700, fontSize: 13 }}>
+                Belum ada outlet yang terhubung dengan akun Anda. Hubungi admin toko/restoran.
+              </div>
+            )}
+          </div>
+
+          {/* Tombol Logout */}
+          <button
+            className="auth-logout-btn"
+            onClick={() => {
+              const { clearCredentials } = require("@/lib/saved-credentials");
+              clearCredentials();
+              signOut(auth).then(() => r.push("/login"));
+            }}
+          >
+            Keluar dari Akun (Logout)
+          </button>
+
+          <div className="auth-footer-note">
+            RuniX Point of Sale System &copy; {new Date().getFullYear()}
           </div>
         </div>
       </div>

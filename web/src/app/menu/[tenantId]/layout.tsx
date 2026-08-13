@@ -5,7 +5,7 @@ import { Suspense } from "react";
  * Tidak wrap dengan provider yang memerlukan auth.
  */
 export const metadata = {
-  title: "Menu - TerraPOS",
+  title: "Menu - RuniX",
   description: "Pesan makanan dari meja Anda",
 };
 

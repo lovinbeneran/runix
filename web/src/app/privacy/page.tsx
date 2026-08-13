@@ -98,7 +98,7 @@ export default function PrivacyPage() {
           <p className="legal-updated">Terakhir diperbarui: 28 Mei 2025</p>
 
           <p>
-            TerraPOS berkomitmen melindungi privasi Anda. Kebijakan Privasi ini menjelaskan
+            RuniX berkomitmen melindungi privasi Anda. Kebijakan Privasi ini menjelaskan
             bagaimana kami mengumpulkan, menggunakan, menyimpan, dan melindungi informasi Anda
             saat menggunakan layanan kami.
           </p>
@@ -197,7 +197,7 @@ export default function PrivacyPage() {
           </ul>
           <p>
             Untuk menggunakan hak-hak ini, hubungi kami di{" "}
-            <a href="mailto:privacy@terrapos.id">privacy@terrapos.id</a>.
+            <a href="mailto:privacy@runix.id">privacy@runix.id</a>.
             Kami akan merespons dalam 14 hari kerja.
           </p>
 
@@ -228,7 +228,7 @@ export default function PrivacyPage() {
 
           <h2>9. Perlindungan Anak</h2>
           <p>
-            Layanan TerraPOS ditujukan untuk pengguna bisnis berusia minimal 17 tahun.
+            Layanan RuniX ditujukan untuk pengguna bisnis berusia minimal 17 tahun.
             Kami tidak dengan sengaja mengumpulkan data dari anak di bawah 17 tahun.
             Jika Anda mengetahui bahwa anak di bawah umur telah memberikan data kepada kami,
             hubungi kami untuk penghapusan.
@@ -246,14 +246,14 @@ export default function PrivacyPage() {
             Untuk pertanyaan tentang privasi atau permintaan terkait data Anda:
           </p>
           <ul>
-            <li>Email: <a href="mailto:privacy@terrapos.id">privacy@terrapos.id</a></li>
+            <li>Email: <a href="mailto:privacy@runix.id">privacy@runix.id</a></li>
             <li>Subjek: "Permintaan Privasi — [Nama Anda]"</li>
           </ul>
         </div>
 
         <footer className="legal-footer">
           <a href="/terms" style={{ color: "#888", marginRight: 16 }}>Syarat & Ketentuan</a>
-          <span>&copy; {new Date().getFullYear()} TerraPOS</span>
+          <span>&copy; {new Date().getFullYear()} RuniX</span>
         </footer>
       </div>
     </main>

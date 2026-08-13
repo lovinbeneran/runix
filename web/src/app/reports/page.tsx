@@ -238,7 +238,7 @@ export default function ReportsPage() {
     const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `laporan-${rangeMode === "custom" ? customStart + "_" + customEnd : preset + "-" + selectedDate}.csv`; a.click(); URL.revokeObjectURL(url);
   }
 
-  if (loading || loadingRole || loadingLvl) return <TerraPage><SkeletonStyles /><PageSkeleton cards={3} /></TerraPage>;
+  // Direct render for seamless page transition
   if (!canAccess) return (<TerraPage><div className="card"><div className="h1">Akses ditolak</div><div className="small">Halaman laporan hanya untuk owner.</div><button className="btn" style={{ marginTop: 12 }} onClick={() => r.push("/dashboard")}>Kembali ke Dashboard</button></div></TerraPage>);
 
   // === BASIC REPORTS (Free & Seed) ===
@@ -252,10 +252,6 @@ export default function ReportsPage() {
           .rp-stat-label{font-size:11px;color:var(--muted);font-weight:700;}
           .rp-upgrade{margin-top:20px;padding:20px;border:1px solid var(--brand);border-radius:14px;background:var(--brandSoft);text-align:center;}
         `}</style>
-
-        <PageHeader title="Laporan" subtitle={`Periode: ${formatDate(dateRange.start)} — ${formatDate(dateRange.end)}`}>
-          <button className="btn" onClick={() => r.push("/dashboard")}>Dashboard</button>
-        </PageHeader>
 
         <div className="card">
           {/* Simple date selector */}

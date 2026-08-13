@@ -79,7 +79,7 @@ export default function BrandColorProvider() {
         const timeSinceMount = Date.now() - mountTimeRef.current;
         if (timeSinceMount < 5000) return;
 
-        const RELOAD_KEY = "terrapos_force_reload";
+        const RELOAD_KEY = "runix_force_reload";
         const lastForceReload = sessionStorage.getItem(RELOAD_KEY);
         const now = Date.now();
         if (lastForceReload && now - Number(lastForceReload) < 15000) return;

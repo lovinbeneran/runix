@@ -15,8 +15,8 @@
  */
 export function hasSavedCredentials(): boolean {
   if (typeof localStorage === "undefined") return false;
-  const email = localStorage.getItem("terrapos_saved_email");
-  const pass = localStorage.getItem("terrapos_saved_pass");
+  const email = localStorage.getItem("runix_saved_email");
+  const pass = localStorage.getItem("runix_saved_pass");
   return !!(email && pass);
 }
 

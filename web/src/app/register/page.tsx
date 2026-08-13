@@ -132,72 +132,79 @@ export default function RegisterPage() {
 
       <div className="reg-wrap">
         <div className="reg-card">
-          <div className="reg-logo">terra <span style={{ color: "var(--brand)" }}>POS</span></div>
+          <div className="reg-logo"><img src="/logo-header.png" alt="RuniX" style={{ height: 36, width: "auto", objectFit: "contain" }} /></div>
           <div className="small" style={{ marginTop: 6 }}>
             Daftar akun baru. Setelah mendaftar, admin akan mengatur akses outlet untuk Anda.
           </div>
 
-          <div className="reg-field">
-            <div className="small">Nama Lengkap</div>
-            <input
-              className="input"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Nama kamu"
-              autoComplete="name"
-            />
-          </div>
-
-          <div className="reg-field">
-            <div className="small">Email</div>
-            <input
-              className="input"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="email@contoh.com"
-              autoComplete="email"
-            />
-          </div>
-
-          <div className="reg-field">
-            <div className="small">Password</div>
-            <input
-              className="input"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Minimal 6 karakter"
-              autoComplete="new-password"
-            />
-          </div>
-
-          <div className="reg-field">
-            <div className="small">Konfirmasi Password</div>
-            <input
-              className="input"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Ketik ulang password"
-              autoComplete="new-password"
-            />
-          </div>
-
-          {err && (
-            <div style={{ marginTop: 12, color: "var(--danger)", fontWeight: 800 }}>
-              {err}
-            </div>
-          )}
-
-          <button
-            className="btn btn-primary"
-            style={{ width: "100%", marginTop: 18 }}
-            onClick={handleRegister}
-            disabled={loading}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!loading) handleRegister();
+            }}
           >
-            {loading ? "Mendaftar..." : "Daftar Akun"}
-          </button>
+            <div className="reg-field">
+              <div className="small">Nama Lengkap</div>
+              <input
+                className="input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Nama kamu"
+                autoComplete="name"
+              />
+            </div>
+
+            <div className="reg-field">
+              <div className="small">Email</div>
+              <input
+                className="input"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="email@contoh.com"
+                autoComplete="email"
+              />
+            </div>
+
+            <div className="reg-field">
+              <div className="small">Password</div>
+              <input
+                className="input"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Minimal 6 karakter"
+                autoComplete="new-password"
+              />
+            </div>
+
+            <div className="reg-field">
+              <div className="small">Konfirmasi Password</div>
+              <input
+                className="input"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Ketik ulang password"
+                autoComplete="new-password"
+              />
+            </div>
+
+            {err && (
+              <div style={{ marginTop: 12, color: "var(--danger)", fontWeight: 800 }}>
+                {err}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{ width: "100%", marginTop: 18 }}
+              disabled={loading}
+            >
+              {loading ? "Mendaftar..." : "Daftar Akun"}
+            </button>
+          </form>
 
           <div className="reg-footer">
             Sudah punya akun? <a href="/login">Login di sini</a>

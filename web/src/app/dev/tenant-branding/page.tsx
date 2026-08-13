@@ -152,7 +152,7 @@ export default function DevTenantBrandingPage() {
         <div className="row" style={{ flexWrap: "wrap", gap: 10 }}>
           <div>
             <div className="h1">Tenant Branding</div>
-            <div className="small">Ubah warna per tenant. Landing page tetap pakai warna default TerraPOS.</div>
+            <div className="small">Ubah warna per tenant. Landing page tetap pakai warna default RuniX.</div>
           </div>
           <div className="spacer" />
           <button className="btn" onClick={() => r.push("/dev")}>← Dev Console</button>

@@ -26,8 +26,8 @@ export default function PrinterPage() {
   const { showPrinting, hidePrinting } = usePrinting();
   const canEdit = ["owner", "admin", "developer"].includes((role || "").toString().toLowerCase());
 
-  const [settings, setSettings] = useState<ReceiptSettings>({ storeName: "TerraPOS", address: "", footer: "Terima kasih.", cashierName: "Kasir TerraPOS" });
-  const [customText, setCustomText] = useState("Tes Printer TerraPOS\nTerima kasih");
+  const [settings, setSettings] = useState<ReceiptSettings>({ storeName: "RuniX", address: "", footer: "Terima kasih.", cashierName: "Kasir RuniX" });
+  const [customText, setCustomText] = useState("Tes Printer RuniX\nTerima kasih");
   const [msg, setMsg] = useState<string | null>(null);
   const [printMode, setPrintModeState] = useState<"browser" | "rawbt" | "bluetooth">("browser");
 
@@ -47,7 +47,7 @@ export default function PrinterPage() {
     setPrintModeState(getPrintMode());
     setIsNative(NativePrinter.isNative());
     // Load printer enabled state
-    const stored = localStorage.getItem("terrapos_printer_enabled");
+    const stored = localStorage.getItem("runix_printer_enabled");
     if (stored !== null) setPrinterEnabled(stored === "true");
   }, []);
 
@@ -94,10 +94,10 @@ export default function PrinterPage() {
         if (snap.exists()) {
           const d = snap.data() as any;
           setSettings({
-            storeName: (d.storeName || "TerraPOS").toString(),
+            storeName: (d.storeName || "RuniX").toString(),
             address: (d.address || "").toString(),
             footer: (d.footer || "Terima kasih.").toString(),
-            cashierName: (d.cashierName || "Kasir TerraPOS").toString(),
+            cashierName: (d.cashierName || "Kasir RuniX").toString(),
           });
           if (d.printerEnabled !== undefined) {
             setPrinterEnabled(d.printerEnabled);
@@ -111,7 +111,7 @@ export default function PrinterPage() {
 
   async function togglePrinterSystem(enabled: boolean) {
     setPrinterEnabled(enabled);
-    localStorage.setItem("terrapos_printer_enabled", String(enabled));
+    localStorage.setItem("runix_printer_enabled", String(enabled));
     if (tenantId) {
       try {
         await setDoc(
@@ -186,7 +186,7 @@ export default function PrinterPage() {
     setMsg(null);
     const testData = {
       title: "TEST PRINT",
-      storeName: settings.storeName || "TerraPOS",
+      storeName: settings.storeName || "RuniX",
       address: settings.address || "",
       footer: settings.footer || "Terima kasih.",
       orderNo: `TEST-${Date.now().toString().slice(-6)}`,
@@ -222,7 +222,7 @@ export default function PrinterPage() {
         toast.success("Dikirim ke RawBT.");
       } else {
         const html = receiptHTML(testData);
-        localStorage.setItem("terrapos_last_receipt_html", html);
+        localStorage.setItem("runix_last_receipt_html", html);
         const w = window.open("", "_blank", "width=420,height=800");
         if (w) {
           w.document.open();
@@ -297,13 +297,7 @@ export default function PrinterPage() {
     return "RawBT — Siap";
   }
 
-  if (loading || loadingRole)
-    return (
-      <TerraPage>
-        <SkeletonStyles />
-        <PageSkeleton cards={3} />
-      </TerraPage>
-    );
+  // Direct render for seamless page transition
 
   return (
     <TerraPage maxWidth={860}>

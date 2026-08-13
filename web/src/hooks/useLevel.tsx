@@ -5,27 +5,27 @@ import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 
-export type UserLevel = "free" | "seed" | "core" | "orbit";
+export type UserLevel = "free" | "delta" | "omega" | "zeta";
 
 const LEVEL_FEATURES: Record<UserLevel, string[]> = {
   free: ["pos", "orders", "shifts", "products", "reports", "settings/receipt", "printer", "refund-pin"],
-  seed: ["pos", "orders", "shifts", "products", "reports", "settings/receipt", "printer", "refund-pin", "staff"],
-  core: ["pos", "orders", "shifts", "products", "reports", "settings/receipt", "printer", "refund-pin", "qr", "staff", "promos", "audit"],
-  orbit: ["pos", "orders", "shifts", "products", "reports", "settings/receipt", "printer", "refund-pin", "qr", "staff", "promos", "audit", "members", "kitchen", "product-images"],
+  delta: ["pos", "orders", "shifts", "products", "reports", "settings/receipt", "printer", "refund-pin", "staff"],
+  omega: ["pos", "orders", "shifts", "products", "reports", "settings/receipt", "printer", "refund-pin", "qr", "staff", "promos", "audit"],
+  zeta: ["pos", "orders", "shifts", "products", "reports", "settings/receipt", "printer", "refund-pin", "qr", "staff", "promos", "audit", "members", "kitchen", "product-images"],
 };
 
 /**
- * Staff account limits per level:
+ * Staff account limits per plan level:
  * - free: 0 (no staff accounts)
- * - seed: 1 staff account
- * - core: 5 staff accounts
- * - orbit: unlimited
+ * - delta: 1 staff account
+ * - omega: 5 staff accounts
+ * - zeta: unlimited
  */
 const STAFF_LIMITS: Record<UserLevel, number> = {
   free: 0,
-  seed: 1,
-  core: 5,
-  orbit: 999, // effectively unlimited
+  delta: 1,
+  omega: 5,
+  zeta: 999, // effectively unlimited
 };
 
 export function useLevel() {
@@ -40,13 +40,13 @@ export function useLevel() {
         if (snap.exists()) {
           const data = snap.data() as any;
           const lvl = (data.level || "free").toString().toLowerCase();
-          if (["free", "seed", "core", "orbit"].includes(lvl)) {
+          if (["free", "delta", "omega", "zeta"].includes(lvl)) {
             setLevel(lvl as UserLevel);
           } else {
-            // Map old levels to new
-            if (lvl === "basic") setLevel("seed");
-            else if (lvl === "premium") setLevel("core");
-            else if (lvl === "owner") setLevel("orbit");
+            // Map old plan levels (seed, core, orbit, etc.) to new (delta, omega, zeta)
+            if (lvl === "seed" || lvl === "basic") setLevel("delta");
+            else if (lvl === "core" || lvl === "premium") setLevel("omega");
+            else if (lvl === "orbit" || lvl === "owner") setLevel("zeta");
             else setLevel("free");
           }
         }
@@ -69,14 +69,14 @@ export function useLevel() {
     return STAFF_LIMITS[level];
   }
 
-  /** Check if user can use promos/discounts (Core+ only) */
+  /** Check if user can use promos/discounts (Omega+ only) */
   function canUsePromos(): boolean {
-    return level === "core" || level === "orbit";
+    return level === "omega" || level === "zeta";
   }
 
-  /** Check if user can access advanced reports (Core+ only) */
+  /** Check if user can access advanced reports (Omega+ only) */
   function canAdvancedReports(): boolean {
-    return level === "core" || level === "orbit";
+    return level === "omega" || level === "zeta";
   }
 
   return { level, loadingLevel, canAccess, canDisableWatermark, getStaffLimit, canUsePromos, canAdvancedReports };

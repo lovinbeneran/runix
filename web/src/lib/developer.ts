@@ -1,5 +1,5 @@
 /**
- * TerraPOS Developer Mode
+ * RuniX Developer Mode
  *
  * Developer adalah super-user yang bisa:
  * - Akses semua tenant tanpa perlu jadi owner/admin
@@ -162,7 +162,7 @@ export function getSystemInfo(): DevSystemInfo {
 
 // ============ LOCAL DEV FLAG ============
 
-const DEV_MODE_KEY = "terrapos_dev_mode";
+const DEV_MODE_KEY = "runix_dev_mode";
 
 export function isDevModeActive(): boolean {
   if (typeof window === "undefined") return false;

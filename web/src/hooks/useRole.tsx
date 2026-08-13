@@ -59,25 +59,33 @@ export function useRole() {
           return;
         }
 
-        // 1. owner tenant = owner
+        // 1. owner tenant = zeta (level tertinggi)
         const tenantSnap = await getDoc(doc(db, `tenants/${tenantId}`));
         if (tenantSnap.exists()) {
           const td = tenantSnap.data() as any;
           if ((td.ownerUid || "") === user.uid) {
-            setRole("owner");
+            setRole("zeta");
             setLoadingRole(false);
             return;
           }
         }
 
-        // 2. cek staff admin
+        // 2. cek staff admin/staff account
         const staffSnap = await getDoc(doc(db, `tenants/${tenantId}/staff/${user.uid}`));
         if (staffSnap.exists()) {
           const sd = staffSnap.data() as any;
           const r = (sd.role || "").toString().toLowerCase();
 
-          if (r === "admin" || r === "owner") {
-            setRole(r);
+          if (r === "zeta" || r === "owner") {
+            setRole("zeta");
+            setLoadingRole(false);
+            return;
+          } else if (r === "omega" || r === "admin" || r === "manager") {
+            setRole("omega");
+            setLoadingRole(false);
+            return;
+          } else if (r === "delta" || r === "kasir" || r === "barista" || r === "staff") {
+            setRole("delta");
             setLoadingRole(false);
             return;
           }

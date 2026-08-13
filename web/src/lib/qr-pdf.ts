@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * TerraPOS - QR Batch PDF Generator
+ * RuniX - QR Batch PDF Generator
  * ============================================================
  * Generates a printable PDF with QR codes for all tables.
  * Uses canvas-based rendering (no external PDF library needed).

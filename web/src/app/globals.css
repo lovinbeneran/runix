@@ -1,27 +1,25 @@
-@import url(https://db.onlinewebfonts.com/c/739571e5b3270dd49b19f413b1ef148e?family=F29LT+Bukra+Regular);
-@import url(https://db.onlinewebfonts.com/c/837ca9196b6625ec9766cc377acc8108?family=F29LT+Bukra+Md);
-@import url(https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap);
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 /* ===== LIGHT MODE (default) ===== */
 :root{
   --bg:#f8f9fb;
   --panel:#ffffff;
-  --border:#e5e7eb;
-  --border-hover:#d1d5db;
+  --border:#EFE6DE;
+  --border-hover:#D8C9BB;
   --text:#111827;
   --muted:#6b7280;
 
-  --brand:#d59567;
-  --brand2:#e4b896;
-  --brandSoft:#fdf5ef;
-  --brandHover:#b87a4f;
+  --brand:#9A0002;
+  --brand2:#EFE6DE;
+  --brandSoft:#F9F4F0;
+  --brandHover:#780002;
 
   --success:#10b981;
   --warning:#f59e0b;
   --danger:#ef4444;
 
-  --font-primary: "F29LT Bukra Regular", "F29LT Bukra Md", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  --font-mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-primary: "Outfit", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
 
   --input-bg:#f9fafb;
   --input-focus:#fdf0f4;
@@ -35,6 +33,11 @@
 
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
+}
+
+[style*="font-mono"], [style*="--font-mono"] {
+  font-variant-numeric: slashed-zero tabular-nums;
+  font-feature-settings: "zero" 1, "tnum" 1;
 }
 
 

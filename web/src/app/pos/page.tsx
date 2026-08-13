@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import TerraPage from "@/components/TerraPage";
+import { OrdersContent } from "@/components/OrdersContent";
+import { ShiftsContent } from "@/components/ShiftsContent";
 import { useTenant } from "@/hooks/useTenant";
 import { useRole } from "@/hooks/useRole";
 import {
@@ -81,14 +83,15 @@ export default function POSPage() {
   const toast = useToast();
   const { showPrinting, hidePrinting } = usePrinting();
 
-  const isOwner = ["owner", "developer"].includes((role || "").toString().toLowerCase());
-  const canUse = ["owner", "admin", "developer"].includes((role || "").toString().toLowerCase());
+  const isOwner = ["zeta", "owner", "developer"].includes((role || "").toString().toLowerCase());
+  const canUse = ["zeta", "omega", "delta", "owner", "admin", "developer"].includes((role || "").toString().toLowerCase());
   const isDev = (role || "").toString().toLowerCase() === "developer";
 
   const { staffAccounts, activeStaff, isLocked, staffEnabled, loginStaff, logoutStaff, switchStaff, error: staffError } = useStaff();
   const { canUsePromos } = useLevel();
 
   const [mode, setMode] = useState<OrderMode>("PAY_NOW");
+  const [orderType, setOrderType] = useState<"DINE_IN" | "TAKEAWAY">("DINE_IN");
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [search, setSearch] = useState("");
@@ -113,10 +116,10 @@ export default function POSPage() {
   const [editingOrderNo, setEditingOrderNo] = useState<string | null>(null);
 
   const [receiptSettings, setReceiptSettings] = useState<ReceiptSettings>({
-    storeName: "TerraPOS",
+    storeName: "RuniX",
     address: "",
     footer: "Terima kasih.",
-    cashierName: "Kasir TerraPOS",
+    cashierName: "Kasir RuniX",
   });
   const [activeShift, setActiveShift] = useState<ShiftRecord | null>(null);
   const [promos, setPromos] = useState<ActivePromo[]>([]);
@@ -125,11 +128,19 @@ export default function POSPage() {
 
   const searchRef = useRef<HTMLInputElement | null>(null);
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [activeTab, setActiveTab] = useState<"POS" | "ORDERS" | "SHIFTS">("POS");
 
   useEffect(() => {
     const t = sp.get("table");
     if (t) setTableNo(t);
   }, [sp]);
+
+  useEffect(() => {
+    if (activeTab !== "POS") {
+      resetCart();
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     if (!tenantId || !editOrderId) {
@@ -178,6 +189,7 @@ export default function POSPage() {
         setPaidAmount(0);
         setNoteOpenId(null);
         setNoteDraft("");
+        setActiveTab("POS");
         setEditingOrderId(editOrderId);
         setEditingOrderNo((data.orderNo || editOrderId).toString());
         setErr(null);
@@ -199,10 +211,10 @@ export default function POSPage() {
         if (snap.exists()) {
           const d = snap.data() as any;
           setReceiptSettings({
-            storeName: (d.storeName || "TerraPOS").toString(),
+            storeName: (d.storeName || "RuniX").toString(),
             address: (d.address || "").toString(),
             footer: (d.footer || "Terima kasih.").toString(),
-            cashierName: (d.cashierName || "Kasir TerraPOS").toString(),
+            cashierName: (d.cashierName || "Kasir RuniX").toString(),
             logoBase64: d.receiptLogoBase64 || "",
             qrText: d.receiptQrText || "",
             showLogo: d.receiptShowLogo ?? false,
@@ -382,6 +394,16 @@ export default function POSPage() {
     );
   }
 
+  function updateQty(index: number, newQty: number) {
+    if (isNaN(newQty) || newQty <= 0) {
+      setCart((prev) => prev.filter((_, idx) => idx !== index));
+    } else {
+      setCart((prev) =>
+        prev.map((i, idx) => (idx === index ? { ...i, qty: newQty } : i))
+      );
+    }
+  }
+
   function openNoteEditor(index: number) {
     setNoteOpenId(String(index));
     setNoteDraft(cart[index]?.notes || "");
@@ -409,6 +431,7 @@ export default function POSPage() {
 
   function resetCart() {
     setCart([]);
+    setTableNo("");
     setDiscount(0);
     setDiscountType("nominal");
     setPayOpen(false);
@@ -424,16 +447,16 @@ export default function POSPage() {
   }
 
   function buildReceiptHtml(orderNo: string, title: "STRUK" | "BILL") {
-    const dateText = new Date().toLocaleString("id-ID");
     const receiptPaymentMethod = title === "STRUK" ? paymentMethod : null;
     return receiptHTML({
       title,
-      storeName: receiptSettings.storeName || "TerraPOS",
+      storeName: receiptSettings.storeName || "RuniX",
       address: receiptSettings.address || "",
       footer: receiptSettings.footer || "Terima kasih.",
       orderNo,
-      dateText,
+      dateText: new Date().toLocaleString("id-ID"),
       tableNo: tableNo.trim() || null,
+      orderType,
       cashierEmail: receiptSettings.cashierName || email || "",
       paymentMethod: receiptPaymentMethod,
       subtotal,
@@ -452,7 +475,7 @@ export default function POSPage() {
     const receiptPaymentMethod = title === "STRUK" ? paymentMethod : null;
     return buildPlainReceipt({
       title,
-      storeName: receiptSettings.storeName || "TerraPOS",
+      storeName: receiptSettings.storeName || "RuniX",
       address: receiptSettings.address || "",
       footer: receiptSettings.footer || "Terima kasih.",
       orderNo,
@@ -481,7 +504,7 @@ export default function POSPage() {
       try {
         showPrinting("Mencetak via Bluetooth...");
         const btData = {
-          storeName: receiptSettings.storeName || "TerraPOS",
+          storeName: receiptSettings.storeName || "RuniX",
           address: receiptSettings.address || "",
           footer: receiptSettings.footer || "Terima kasih.",
           title: receiptDataForBT?.title || "STRUK",
@@ -563,6 +586,7 @@ export default function POSPage() {
       if (editingOrderId) {
         await updateDoc(doc(db, `tenants/${tenantId}/orders/${editingOrderId}`), {
           tableNo: tNo,
+          orderType,
           items: cart,
           subtotal,
           discount: totalDiscount,
@@ -579,6 +603,7 @@ export default function POSPage() {
             orderNo,
             status: "OPEN" as OrderStatus,
             mode: "PAY_LATER" as OrderMode,
+            orderType,
             tableNo: tNo,
             discount: totalDiscount,
             subtotal,
@@ -605,6 +630,7 @@ export default function POSPage() {
           const newTotal = Math.max(0, newSubtotal - newDiscount);
 
           await updateDoc(refDoc, {
+            orderType,
             items: merged,
             subtotal: newSubtotal,
             discount: newDiscount,
@@ -616,7 +642,7 @@ export default function POSPage() {
 
       const billNo = receiptOrderNo || `BILL-${Date.now()}`;
       const html = buildReceiptHtml(billNo, "BILL");
-      localStorage.setItem("terrapos_last_receipt_html", html);
+      localStorage.setItem("runix_last_receipt_html", html);
 
       const text = buildReceiptText(billNo, "BILL");
 
@@ -655,6 +681,7 @@ export default function POSPage() {
         orderNo,
         status: "PAID" as OrderStatus,
         mode: "PAY_NOW" as OrderMode,
+        orderType,
         tableNo: tableNo.trim() || null,
         paymentMethod,
         paidAmount: paymentMethod === "CASH" ? paidAmount : total,
@@ -672,7 +699,7 @@ export default function POSPage() {
       });
 
       const html = buildReceiptHtml(orderNo, "STRUK");
-      localStorage.setItem("terrapos_last_receipt_html", html);
+      localStorage.setItem("runix_last_receipt_html", html);
 
       const text = buildReceiptText(orderNo, "STRUK");
 
@@ -717,7 +744,10 @@ export default function POSPage() {
     void printBySelectedMode(billSuccessDialog.html, billSuccessDialog.text, billSuccessDialog.btData);
     setBillSuccessDialog(null);
     resetCart();
-    if (wasEditing) r.push("/orders");
+    if (wasEditing) {
+      r.replace("/pos");
+      setActiveTab("ORDERS");
+    }
   }
 
   function handleBillSkip() {
@@ -725,7 +755,10 @@ export default function POSPage() {
     const wasEditing = billSuccessDialog.wasEditing;
     setBillSuccessDialog(null);
     resetCart();
-    if (wasEditing) r.push("/orders");
+    if (wasEditing) {
+      r.replace("/pos");
+      setActiveTab("ORDERS");
+    }
   }
 
   if (loading || loadingRole) {
@@ -763,60 +796,62 @@ export default function POSPage() {
   }
 
   return (
-    <TerraPage>
+    <TerraPage maxWidth={10000} noPadding={true}>
       <style>{`
         .pos-grid{
           display:grid;
-          grid-template-columns: 1fr 360px;
-          gap:14px;
+          grid-template-columns: 1fr 380px;
+          gap:18px;
           align-items:start;
           max-width:100%;
-          overflow:hidden;
         }
-        @media (max-width: 1080px){ .pos-grid{ grid-template-columns: 1fr 320px; } }
+        @media (max-width: 1080px){ .pos-grid{ grid-template-columns: 1fr 340px; } }
         @media (max-width: 980px){
-          .pos-grid{ grid-template-columns: 1fr !important; padding-bottom:80px; }
+          .pos-grid{ grid-template-columns: 1fr !important; padding-bottom:90px; }
           .pos-grid > .card{ min-width:0; overflow:hidden; }
         }
         .product-grid{
-          margin-top:12px;
+          margin-top:16px;
           display:grid;
-          grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-          gap:10px;
-          overflow:hidden;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap:14px;
         }
         @media (max-width: 640px){
-          .product-grid{ grid-template-columns: repeat(2, 1fr); gap:6px; }
-          .product-btn{ padding:10px; }
-          .product-name{ font-size:12px; }
-          .product-meta{ font-size:10px; margin-top:2px; }
-          .product-price{ margin-top:4px; font-size:12px; }
+          .product-grid{ grid-template-columns: repeat(2, 1fr); gap:10px; }
+          .product-btn{ padding:12px; }
+          .product-name{ font-size:13px; }
+          .product-meta{ font-size:11px; margin-top:2px; }
+          .product-price{ margin-top:6px; font-size:13px; }
         }
         .product-btn{
+          position:relative;
           text-align:left;
-          padding:14px;
-          border-radius: var(--radius);
+          padding:16px;
+          border-radius:18px;
           border:1px solid var(--border);
-          background: var(--panel);
+          background: linear-gradient(145deg, var(--panel), var(--input-bg));
           cursor:pointer;
-          transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
           touch-action: manipulation;
           overflow:hidden;
           word-break:break-word;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.03);
         }
         .product-btn:hover{
-          background: var(--brandSoft);
-          border-color: var(--brand2);
-          box-shadow: var(--shadow);
+          transform: translateY(-4px);
+          background: var(--panel);
+          border-color: var(--brand);
+          box-shadow: 0 12px 28px rgba(154, 0, 2, 0.12);
         }
         .product-btn:active{
-          transform: scale(0.97);
+          transform: scale(0.96);
         }
-        .product-name{ font-weight:800; font-size:14px; line-height:1.3; color: var(--text); }
-        .product-meta{ font-size:11px; color: var(--muted); margin-top:3px; }
-        .product-price{ margin-top:8px; font-weight:900; color: var(--brand); font-size:15px; font-family: var(--font-mono); }
+        .product-name{ font-weight:800; font-size:15px; line-height:1.3; color: var(--text); letter-spacing:-0.2px; }
+        .product-meta{ font-size:12px; color: var(--muted); margin-top:4px; font-weight:500; }
+        .product-price{ margin-top:12px; font-weight:900; color: var(--brand); font-size:16px; font-family: var(--font-mono); display:flex; align-items:center; justify-content:space-between; }
+        .product-price::after{ content:'+'; display:inline-grid; place-items:center; width:24px; height:24px; border-radius:50%; background:var(--brandSoft); color:var(--brand); font-size:14px; font-weight:900; }
         .cart-item{
-          padding:12px 0;
+          padding:14px 0;
           border-bottom:1px solid var(--border);
           transition: background 0.15s ease;
         }
@@ -835,7 +870,7 @@ export default function POSPage() {
           display:flex;
           gap:8px;
           flex-wrap:wrap;
-          margin-top:10px;
+          margin-top:12px;
         }
         .note-box{
           margin-top:8px;
@@ -847,14 +882,20 @@ export default function POSPage() {
         .pos-categories{
           display:flex;
           gap:8px;
-          margin-top:10px;
+          margin-top:14px;
           overflow-x:auto;
-          padding-bottom:4px;
+          padding-bottom:6px;
           -webkit-overflow-scrolling: touch;
           scrollbar-width: none;
         }
         .pos-categories::-webkit-scrollbar{ display:none; }
-        .pos-categories .btn{ flex-shrink:0; }
+        .pos-categories .btn{
+          flex-shrink:0;
+          border-radius:999px;
+          padding:8px 18px;
+          font-weight:700;
+          transition: all 0.2s ease;
+        }
         .cart-summary{
           margin-top:14px;
           padding-top:14px;
@@ -1064,329 +1105,742 @@ export default function POSPage() {
         }
       `}</style>
 
-      <div className="card">
-        <div className="row">
-          <div>
-            <div style={{ fontSize: 22, fontWeight: 800, fontFamily: "var(--font-primary)", lineHeight: 1 }}>terra <span style={{ color: "var(--brand)" }}>POS</span></div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", marginTop: 6 }}>
-              <LevelBadge size="small" />
-              {activeStaff && (
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 999, background: "rgba(213,149,103,0.15)", border: "1px solid var(--brand)", fontSize: 11, fontWeight: 800, color: "var(--brand)", cursor: "pointer" }} onClick={switchStaff} title="Klik untuk ganti staff">
-                  &#128100; {activeStaff.staffName}
-                </span>
-              )}
-              <span style={{ display: "inline-flex", alignItems: "center", padding: "4px 8px", borderRadius: 999, background: "var(--input-bg)", border: "1px solid var(--border)", fontSize: 11, fontWeight: 600, color: "var(--muted)" }}>
-                {email || "-"}
-              </span>
-              {tableNo ? (
-                <span style={{ display: "inline-flex", alignItems: "center", padding: "4px 8px", borderRadius: 999, background: "var(--input-bg)", border: "1px solid var(--border)", fontSize: 11, fontWeight: 600, color: "var(--muted)" }}>
-                  Meja: {tableNo}
-                </span>
-              ) : null}
-            </div>
-            <div className="small" style={{ marginTop: 6 }}>
-              Shift: <b>{shiftAccessBlocked ? "Belum aktif di rules" : activeShift ? `OPEN - ${activeShift.openedByEmail || "-"}` : "Belum dibuka"}</b>
-            </div>
+      <style>{`
+        /* ===== 100% FULL WIDTH POS SIDEBAR LAYOUT ===== */
+        .pos-root-container {
+          display: flex;
+          gap: 16px;
+          height: 100vh;
+          width: 100vw;
+          max-width: 100%;
+          overflow: hidden;
+          padding: 12px;
+          box-sizing: border-box;
+        }
 
-            <div className="modebar">
-              <button
-                className={"btn " + (mode === "PAY_NOW" ? "btn-primary" : "")}
-                onClick={() => {
-                  setMode("PAY_NOW");
-                  setErr(null);
-                }}
-              >
-                Bayar Sekarang
-              </button>
+        /* 1. Left Vertical Dock (Expandable / Collapsible via Logo Click with Smooth Animations) */
+        .pos-sidebar-dock {
+          width: 220px;
+          background: var(--panel);
+          border: 1px solid var(--border);
+          border-radius: 24px;
+          display: flex;
+          flex-direction: column;
+          align-items: stretch;
+          padding: 20px 14px;
+          gap: 8px;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.03);
+          flex-shrink: 0;
+          transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .pos-sidebar-dock.collapsed {
+          width: 72px;
+          padding: 20px 10px;
+          align-items: center;
+        }
+        .pos-sidebar-brand {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding-bottom: 12px;
+          margin-bottom: 4px;
+          border-bottom: 1px solid var(--border);
+          width: 100%;
+          cursor: pointer;
+          user-select: none;
+          position: relative;
+          height: 38px;
+          border-radius: 12px;
+          transition: background 0.2s ease;
+        }
+        .pos-sidebar-brand:hover {
+          background: var(--brandSoft);
+        }
+        .pos-sidebar-logo-wrap {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          height: 100%;
+        }
+        .pos-sidebar-logo-img {
+          position: absolute;
+          object-fit: contain;
+          transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .pos-sidebar-logo-img.full {
+          height: 26px;
+          width: auto;
+          opacity: 1;
+          transform: scale(1) rotate(0deg);
+        }
+        .pos-sidebar-dock.collapsed .pos-sidebar-logo-img.full {
+          opacity: 0;
+          transform: scale(0.6) rotate(-10deg);
+          pointer-events: none;
+        }
+        .pos-sidebar-logo-img.favicon {
+          height: 28px;
+          width: 28px;
+          opacity: 0;
+          transform: scale(0.6) rotate(10deg);
+          pointer-events: none;
+        }
+        .pos-sidebar-dock.collapsed .pos-sidebar-logo-img.favicon {
+          opacity: 1;
+          transform: scale(1) rotate(0deg);
+          pointer-events: auto;
+        }
+        .pos-dock-btn-full {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 14px;
+          border-radius: 16px;
+          border: 1px solid transparent;
+          background: transparent;
+          color: var(--text);
+          font-weight: 700;
+          font-size: 14px;
+          cursor: pointer;
+          text-align: left;
+          width: 100%;
+          white-space: nowrap;
+          overflow: hidden;
+          position: relative;
+        }
+        .pos-sidebar-dock.collapsed .pos-dock-btn-full {
+          padding: 12px;
+          justify-content: center;
+          width: 48px;
+          height: 48px;
+          border-radius: 14px;
+        }
+        .pos-dock-btn-label {
+          display: inline-block;
+        }
+        .pos-sidebar-dock.collapsed .pos-dock-btn-label {
+          display: none;
+        }
+        .pos-dock-btn-full:hover {
+          background: var(--brandSoft);
+          color: var(--brand);
+        }
+        .pos-dock-btn-full.active {
+          background: var(--brand);
+          color: #fff;
+          border-color: var(--brand);
+          box-shadow: 0 6px 18px rgba(154, 0, 2, 0.22);
+        }
+        .pos-dock-svg-icon {
+          width: 20px;
+          height: 20px;
+          flex-shrink: 0;
+        }
 
-              <button
-                className={"btn " + (mode === "PAY_LATER" ? "btn-primary" : "")}
-                onClick={() => {
-                  setMode("PAY_LATER");
-                  setErr(null);
-                }}
-              >
-                Bayar Nanti (Meja)
-              </button>
+        /* 2. Middle Main Catalog Section & Modern Segmented Filter Dock */
+        .pos-catalog-section {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          min-width: 0;
+          overflow-y: auto;
+          padding-right: 4px;
+        }
+        .pos-top-searchbar {
+          background: var(--panel);
+          border: 1px solid var(--border);
+          border-radius: 24px;
+          padding: 8px 12px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          box-shadow: 0 8px 30px rgba(0,0,0,0.03);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+        }
+        .pos-search-wrap-v2 {
+          position: relative;
+          width: 100%;
+          display: flex;
+          align-items: center;
+        }
+        .pos-search-input-v2 {
+          width: 100%;
+          border-radius: 18px;
+          padding: 10px 16px 10px 42px;
+          font-size: 13px;
+          font-weight: 600;
+          border: 1px solid var(--border);
+          background: var(--brandSoft);
+          color: var(--text);
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .pos-search-input-v2:focus {
+          outline: none;
+          background: var(--panel);
+          border-color: var(--brand);
+          box-shadow: 0 0 0 3.5px rgba(154, 0, 2, 0.12);
+        }
+        .pos-search-icon-v2 {
+          position: absolute;
+          left: 14px;
+          width: 16px;
+          height: 16px;
+          color: var(--muted);
+          pointer-events: none;
+        }
+        .pos-cat-pill-container {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          background: var(--brandSoft);
+          padding: 5px;
+          border-radius: 20px;
+          border: 1px solid var(--border);
+          overflow-x: auto;
+          scrollbar-width: none;
+        }
+        .pos-cat-pill-container::-webkit-scrollbar { display: none; }
+        .pos-cat-pill {
+          padding: 8px 18px;
+          border-radius: 15px;
+          border: none;
+          background: transparent;
+          color: var(--muted);
+          font-weight: 800;
+          font-size: 12px;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .pos-cat-pill:hover {
+          color: var(--text);
+        }
+        .pos-cat-pill.active {
+          background: var(--panel);
+          color: var(--brand);
+          box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        .pos-product-grid-v3 {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 16px;
+        }
+        @media (max-width: 1200px) {
+          .pos-product-grid-v3 {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+        @media (max-width: 768px) {
+          .pos-product-grid-v3 {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+        .pos-card-v3 {
+          background: var(--panel);
+          border: 1px solid var(--border);
+          border-radius: 20px;
+          padding: 12px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          cursor: pointer;
+          transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+          box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+          position: relative;
+          overflow: hidden;
+        }
+        .pos-card-v3:hover {
+          transform: translateY(-5px);
+          border-color: var(--brand);
+          box-shadow: 0 12px 30px rgba(154, 0, 2, 0.12);
+        }
+        .pos-card-v3:active { transform: scale(0.97); }
+        .pos-card-img-wrap {
+          position: relative;
+          width: 100%;
+          height: 140px;
+          border-radius: 16px;
+          overflow: hidden;
+          margin-bottom: 12px;
+          background: var(--input-bg);
+        }
+        .pos-card-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.3s ease;
+        }
+        .pos-card-v3:hover .pos-card-img {
+          transform: scale(1.05);
+        }
+        .pos-card-badge {
+          position: absolute;
+          top: 8px;
+          left: 8px;
+          background: rgba(0,0,0,0.65);
+          backdrop-filter: blur(8px);
+          color: #fff;
+          font-size: 10px;
+          font-weight: 700;
+          padding: 4px 10px;
+          border-radius: 999px;
+          letter-spacing: 0.3px;
+        }
+        .pos-card-add-btn {
+          width: 34px;
+          height: 34px;
+          border-radius: 50%;
+          background: var(--brand);
+          color: #fff;
+          display: grid;
+          place-items: center;
+          font-size: 16px;
+          font-weight: 900;
+          box-shadow: 0 4px 12px rgba(154, 0, 2, 0.3);
+          transition: transform 0.2s ease, background 0.2s ease;
+        }
+        .pos-card-v3:hover .pos-card-add-btn {
+          transform: scale(1.12);
+        }
+
+        /* 3. Right Floating Receipt Panel (Gaya Minimalist Floating Receipt Glass) */
+        .pos-receipt-panel {
+          width: 410px;
+          background: var(--panel);
+          color: var(--text);
+          border: 1.5px solid var(--border);
+          border-radius: 28px;
+          padding: 24px;
+          display: flex;
+          flex-direction: column;
+          box-shadow: 0 16px 50px rgba(0,0,0,0.06);
+          flex-shrink: 0;
+          height: 100%;
+        }
+        .pos-receipt-list {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          margin-top: 14px;
+          overflow-y: auto;
+          padding-right: 4px;
+        }
+        .pos-cart-card {
+          background: var(--panel);
+          border: 1.5px solid var(--border);
+          border-radius: 20px;
+          padding: 14px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.02);
+          transition: all 0.2s ease;
+        }
+        .pos-cart-card:hover {
+          border-color: var(--brand);
+          box-shadow: 0 6px 20px rgba(154, 0, 2, 0.08);
+          transform: translateY(-2px);
+        }
+        .pos-cart-total-banner {
+          background: linear-gradient(135deg, var(--brand), #780002);
+          color: #FFFFFF;
+          border-radius: 24px;
+          padding: 22px;
+          margin-top: 16px;
+          box-shadow: 0 12px 35px rgba(154, 0, 2, 0.3);
+        }
+
+        @media (max-width: 1024px) {
+          .pos-root-container { flex-direction: column; height: auto; overflow: visible; }
+          .pos-sidebar-dock { width: 100%; height: auto; flex-direction: row; justify-content: space-between; border-radius: 20px; flex-wrap: wrap; }
+          .pos-receipt-panel { width: 100%; height: auto; }
+        }
+      `}</style>
+
+      <div className="pos-root-container">
+        {/* 1. EXPANDABLE / COLLAPSIBLE SIDEBAR DOCK (CLICK LOGO TO TOGGLE) */}
+        <div className={`pos-sidebar-dock ${sidebarCollapsed ? "collapsed" : ""}`}>
+          <div
+            className="pos-sidebar-brand"
+            onClick={() => setSidebarCollapsed((prev) => !prev)}
+            title={sidebarCollapsed ? "Klik logo untuk memperbesar sidebar" : "Klik logo untuk memperkecil sidebar"}
+          >
+            <div className="pos-sidebar-logo-wrap">
+              <img src="/logo-header.png" alt="RuniX POS" className="pos-sidebar-logo-img full" />
+              <img src="/favicon.png" alt="RuniX POS" className="pos-sidebar-logo-img favicon" />
             </div>
-
-            {editingOrderId && (
-              <div className="small" style={{ marginTop: 10, fontWeight: 800, color: "var(--brand)" }}>
-                Sedang edit open bill: <b>{editingOrderNo || editingOrderId}</b>
-              </div>
-            )}
           </div>
 
-          <div className="spacer" />
+          {/* Nav 1: Kasir POS */}
+          <button
+            className={`pos-dock-btn-full ${activeTab === "POS" ? "active" : ""}`}
+            onClick={() => setActiveTab("POS")}
+            title="Kasir POS"
+          >
+            <svg className="pos-dock-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <span className="pos-dock-btn-label">Kasir POS</span>
+          </button>
 
-          <div className="topnav">
-            <button className="btn" onClick={() => r.push("/orders")}>Orders</button>
-            <button className="btn hide-mobile" onClick={() => r.push("/shifts")}>Shift</button>
-            {isOwner && (
-              <button className="btn btn-primary" onClick={() => r.push("/dashboard")}>
-                Dashboard
-              </button>
-            )}
-            {isDev && (
-              <button className="btn" onClick={() => r.push("/dev")} style={{ background: "var(--input-bg)", fontWeight: 700 }}>
-                Dev
-              </button>
-            )}
-            {staffEnabled && activeStaff && (
-              <button className="btn" onClick={switchStaff} style={{ fontSize: 12 }}>
-                Ganti Staff
-              </button>
-            )}
-            <button className="btn btn-danger" onClick={() => signOut(auth).then(() => r.push("/login"))}>
-              Logout
+          <div style={{ width: sidebarCollapsed ? "80%" : "100%", height: 1, background: "var(--border)", opacity: 0.7, margin: "1px 0", transition: "width 0.3s ease" }} />
+
+          {/* Nav 2: Daftar Pesanan */}
+          <button
+            className={`pos-dock-btn-full ${activeTab === "ORDERS" ? "active" : ""}`}
+            onClick={() => setActiveTab("ORDERS")}
+            title="Daftar Pesanan"
+          >
+            <svg className="pos-dock-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+            <span className="pos-dock-btn-label">Daftar Pesanan</span>
+          </button>
+
+          <div style={{ width: sidebarCollapsed ? "80%" : "100%", height: 1, background: "var(--border)", opacity: 0.7, margin: "1px 0", transition: "width 0.3s ease" }} />
+
+          {/* Nav 3: Shift Kasir */}
+          <button
+            className={`pos-dock-btn-full ${activeTab === "SHIFTS" ? "active" : ""}`}
+            onClick={() => setActiveTab("SHIFTS")}
+            title="Shift Kasir"
+          >
+            <svg className="pos-dock-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="pos-dock-btn-label">Shift Kasir</span>
+          </button>
+
+          <div style={{ flex: 1 }} />
+
+          <button
+            className="pos-dock-btn-full"
+            onClick={() => r.push("/dashboard")}
+            title="Dashboard"
+            style={{
+              background: "rgba(59, 130, 246, 0.12)",
+              color: "#2563EB",
+              border: "1px solid rgba(59, 130, 246, 0.25)",
+              fontWeight: 800,
+              marginBottom: 4,
+            }}
+          >
+            <svg className="pos-dock-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span className="pos-dock-btn-label">Dashboard</span>
+          </button>
+
+          {isDev && (
+            <button
+              className="pos-dock-btn-full"
+              onClick={() => r.push("/dev")}
+              title="Dev Console"
+              style={{
+                background: "rgba(168, 85, 247, 0.12)",
+                color: "#9333EA",
+                border: "1px solid rgba(168, 85, 247, 0.25)",
+                fontWeight: 800,
+                marginBottom: 4,
+              }}
+            >
+              <svg className="pos-dock-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+              <span className="pos-dock-btn-label">Dev Console</span>
             </button>
-          </div>
-        </div>
-      </div>
+          )}
 
-      <div className="pos-grid">
-        <div className="card">
-          <div className="row" style={{ gap: 8 }}>
-            <input
-              ref={searchRef}
-              className="input"
-              style={{ flex: 1, minWidth: 0 }}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Cari menu..."
-            />
-            <input
-              className="input"
-              style={{ width: 120, flexShrink: 0 }}
-              value={tableNo}
-              onChange={(e) => setTableNo(e.target.value)}
-              placeholder="No. Meja"
-            />
-          </div>
-
-          <div className="pos-categories">
-            {categories.map((c) => (
-              <button
-                key={c}
-                className={"btn " + (activeCat === c ? "btn-primary" : "")}
-                onClick={() => setActiveCat(c)}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-
-          {err && <div style={{ marginTop: 10, color: "var(--danger)", fontWeight: 800 }}>{err}</div>}
-
-          <div className="product-grid">
-            {filtered.map((p) => (
-              <button key={p.id} className="product-btn" onClick={() => addToCart(p)} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                {p.imageUrl && (
-                  <img src={p.imageUrl} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
-                )}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="product-name">{p.name}</div>
-                  <div className="product-meta">{p.category}</div>
-                  <div className="product-price">Rp {rupiah(p.price)}</div>
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {filtered.length === 0 && <div className="small" style={{ marginTop: 12 }}>Tidak ada menu.</div>}
+          {/* End of sidebar bottom dock */}
         </div>
 
-        <div className="card pos-cart-desktop">
-          <div className="row">
-            <div className="h1">Keranjang</div>
-            <div className="spacer" />
-            <button className="btn" onClick={resetCart}>Reset</button>
-          </div>
-
-          <div style={{ marginTop: 12 }}>
-            {cart.length === 0 ? (
-              <div className="small">Keranjang kosong.</div>
-            ) : (
-              cart.map((i, index) => (
-                <div key={`${i.id}-${index}`} className="cart-item">
-                  <div className="row" style={{ alignItems: "flex-start" }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 900 }}>{i.name}</div>
-                      <div className="small">{i.category} • Rp {rupiah(i.price)}</div>
-                      {(i.notes || "").trim() ? (
-                        <div className="small" style={{ marginTop: 6 }}>
-                          Catatan: <b>{i.notes}</b>
-                        </div>
-                      ) : null}
-                    </div>
-
-                    <div className="row">
-                      <button className="btn" onClick={() => dec(index)}>-</button>
-                      <b style={{ minWidth: 24, textAlign: "center" }}>{i.qty}</b>
-                      <button className="btn" onClick={() => inc(index)}>+</button>
-                    </div>
-                  </div>
-
-                  <div className="row" style={{ marginTop: 10 }}>
-                    <button className="btn" onClick={() => openNoteEditor(index)}>
-                      {(i.notes || "").trim() ? "Edit Catatan" : "Tambah Catatan"}
-                    </button>
-                  </div>
-
-                  {noteOpenId === String(index) && (
-                    <div className="note-box">
-                      <div className="small">Catatan untuk {i.name}</div>
-                      <textarea
-                        className="input"
-                        style={{ marginTop: 8, minHeight: 80 }}
-                        value={noteDraft}
-                        onChange={(e) => setNoteDraft(e.target.value)}
-                        placeholder="Contoh: tanpa gula, pedas sedang, es sedikit"
-                      />
-                      <div className="row" style={{ marginTop: 8 }}>
-                        <button className="btn btn-primary" onClick={() => saveNote(index)}>
-                          Simpan Catatan
-                        </button>
-                        <button className="btn" onClick={() => clearNote(index)}>
-                          Hapus Catatan
-                        </button>
-                        <button
-                          className="btn"
-                          onClick={() => {
-                            setNoteOpenId(null);
-                            setNoteDraft("");
-                          }}
-                        >
-                          Tutup
-                        </button>
-                      </div>
-                    </div>
-                  )}
+        {/* 2. TAB CONTENT VIEW (POS vs ORDERS vs SHIFTS) */}
+        {activeTab === "POS" ? (
+          <>
+            {/* KATALOG UTAMA */}
+            <div className="pos-catalog-section">
+              {/* Header Bar: Search */}
+              <div className="pos-top-searchbar">
+                <div className="pos-search-wrap-v2">
+                  <svg className="pos-search-icon-v2" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <input
+                    ref={searchRef}
+                    className="pos-search-input-v2"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Cari nama menu / makanan / minuman..."
+                  />
                 </div>
-              ))
-            )}
-          </div>
-
-          <div style={{ marginTop: 12 }}>
-            <div className="row" style={{ justifyContent: "space-between" }}>
-              <span className="small">Subtotal</span>
-              <b>Rp {rupiah(subtotal)}</b>
-            </div>
-
-            <div className="row" style={{ justifyContent: "space-between", marginTop: 8 }}>
-              <span className="small">Diskon</span>
-              {canUsePromos() ? (
-              <div className="row" style={{ gap: 6 }}>
-                <button
-                  className={"btn " + (discountType === "nominal" ? "btn-primary" : "")}
-                  style={{ padding: "4px 8px", fontSize: 11 }}
-                  onClick={() => setDiscountType("nominal")}
-                >
-                  Rp
-                </button>
-                <button
-                  className={"btn " + (discountType === "persen" ? "btn-primary" : "")}
-                  style={{ padding: "4px 8px", fontSize: 11 }}
-                  onClick={() => setDiscountType("persen")}
-                >
-                  %
-                </button>
-                <input
-                  className="input"
-                  style={{ width: 90, textAlign: "right" }}
-                  type="number"
-                  value={discount}
-                  onChange={(e) => setDiscount(Number(e.target.value || 0))}
-                />
               </div>
-              ) : (
-              <span className="small" style={{ color: "var(--muted)" }}>Core+</span>
-              )}
-            </div>
-            {canUsePromos() && discountType === "persen" && discount > 0 && (
-              <div className="small" style={{ textAlign: "right", marginTop: 4 }}>
-                = Rp {rupiah(discountAmount)}
-              </div>
-            )}
 
-            {canUsePromos() && appliedPromo && promoDiscountAmount > 0 && (
-              <div style={{ marginTop: 8, padding: "8px 10px", borderRadius: 10, background: "var(--brandSoft)", border: "1px solid var(--brand2)" }}>
-                <div className="row" style={{ justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--brand)" }}>
-                    Promo: {appliedPromo.name} {appliedPromo.code && `(${appliedPromo.code})`}
-                  </span>
-                  <b style={{ fontSize: 13, color: "var(--brand)" }}>- Rp {rupiah(promoDiscountAmount)}</b>
-                </div>
-                <div className="small" style={{ marginTop: 2 }}>
-                  {appliedPromo.type === "percent" ? `${appliedPromo.value}% off` : `Rp ${rupiah(appliedPromo.value)} off`} &bull; {appliedPromo.code ? "kode promo" : "otomatis"}
-                </div>
-                {appliedPromo.code && (
-                  <button className="btn" style={{ marginTop: 6, padding: "4px 8px", fontSize: 11 }} onClick={() => { setRedeemedCode(""); setPromoCodeInput(""); }}>
-                    Hapus Kode
+              {/* Kategori Filter Pills */}
+              <div className="pos-cat-pill-container">
+                {categories.map((c) => (
+                  <button
+                    key={c}
+                    className={"pos-cat-pill " + (activeCat === c ? "active" : "")}
+                    onClick={() => setActiveCat(c)}
+                  >
+                    {c}
                   </button>
-                )}
+                ))}
               </div>
-            )}
 
-            {canUsePromos() && !redeemedCode && (
-              <div className="row" style={{ marginTop: 8, gap: 6 }}>
-                <input
-                  className="input"
-                  style={{ flex: 1, textTransform: "uppercase" }}
-                  value={promoCodeInput}
-                  onChange={(e) => setPromoCodeInput(e.target.value.toUpperCase())}
-                  placeholder="Kode promo..."
-                />
-                <button
-                  className="btn btn-primary"
-                  style={{ padding: "10px 14px", fontSize: 12 }}
-                  onClick={() => {
-                    const code = promoCodeInput.trim().toUpperCase();
-                    if (!code) return;
-                    const found = promos.find((p) => p.code === code);
-                    if (!found) { toast.error("Kode promo tidak ditemukan"); return; }
-                    setRedeemedCode(code);
-                    toast.success(`Kode "${code}" berhasil dipakai!`);
+              {/* Produk Grid 4 Kolom (atau Card Terkunci jika Shift Belum Dibuka) */}
+              {!activeShift && !shiftAccessBlocked ? (
+                <div
+                  style={{
+                    background: "var(--brandSoft)",
+                    border: "2px dashed var(--border)",
+                    borderRadius: 24,
+                    padding: "60px 24px",
+                    textAlign: "center",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 16,
+                    margin: "20px 0",
                   }}
                 >
-                  Pakai
-                </button>
-              </div>
-            )}
+                  <div
+                    style={{
+                      width: 72,
+                      height: 72,
+                      borderRadius: 999,
+                      background: "rgba(245, 158, 11, 0.15)",
+                      color: "#d97706",
+                      display: "grid",
+                      placeItems: "center",
+                      fontSize: 32,
+                      border: "1px solid rgba(245, 158, 11, 0.3)",
+                    }}
+                  >
+                    🔒
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text)" }}>Shift Belum Dibuka</div>
+                    <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 6, maxWidth: 400, lineHeight: 1.6 }}>
+                      Katalog menu kasir terkunci. Buka shift kasir terlebih dahulu pada tab <b>Shift Kasir</b> agar pencatatan transaksi tercatat secara akurat.
+                    </div>
+                  </div>
+                  <button
+                    className="btn btn-primary"
+                    style={{ padding: "12px 24px", fontSize: 14, fontWeight: 800, borderRadius: 14 }}
+                    onClick={() => setActiveTab("SHIFTS")}
+                  >
+                    ⚡ Buka Shift Kasir Sekarang
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="pos-product-grid-v3">
+                    {filtered.map((p) => (
+                      <div
+                        key={p.id}
+                        className="pos-card-v3"
+                        onClick={() => addToCart(p)}
+                      >
+                        <div className="pos-card-img-wrap">
+                          <img
+                            src={p.imageUrl || "/favicon.png"}
+                            alt={p.name}
+                            className="pos-card-img"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = "/favicon.png";
+                            }}
+                          />
+                          <span className="pos-card-badge">{p.category}</span>
+                        </div>
 
-            <div className="row" style={{ justifyContent: "space-between", marginTop: 10 }}>
-              <b>Total</b>
-              <b style={{ color: "var(--brand)" }}>Rp {rupiah(total)}</b>
+                        <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text)", lineHeight: 1.3, marginBottom: 8 }}>
+                          {p.name}
+                        </div>
+
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto" }}>
+                          <span style={{ fontWeight: 900, color: "var(--brand)", fontSize: 16, fontFamily: "var(--font-mono)" }}>
+                            Rp {rupiah(p.price)}
+                          </span>
+                          <div className="pos-card-add-btn">+</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {filtered.length === 0 && <div className="small" style={{ textAlign: "center", padding: 40 }}>Menu tidak ditemukan.</div>}
+                </>
+              )}
             </div>
 
-            {mode === "PAY_NOW" ? (
-              <button
-                className="btn btn-primary"
-                style={{ width: "100%", marginTop: 12 }}
-                disabled={cart.length === 0}
-                onClick={() => {
-                  setPayOpen(true);
-                  setPaidAmount(0);
-                  setPaymentMethod("CASH");
-                }}
-              >
-                Bayar Sekarang
-              </button>
-            ) : (
-              <button
-                className="btn btn-primary"
-                style={{ width: "100%", marginTop: 12 }}
-                disabled={cart.length === 0}
-                onClick={savePayLater}
-              >
-                Simpan Order (Bayar Nanti)
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+            {/* 3. STRUK KASIR (GAYA MINIMALIST FLOATING RECEIPT GLASS) */}
+            <div className="pos-receipt-panel pos-cart-desktop">
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 14, borderBottom: "1.5px solid var(--border)" }}>
+                <div>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: "var(--text)" }}>Struk Tagihan</div>
+                  <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{cart.length} Jenis item dipilih</div>
+                </div>
+                <button className="btn btn-ghost" onClick={resetCart} style={{ color: "var(--danger)", fontSize: 12, fontWeight: 800, padding: "4px 8px" }}>Kosongkan</button>
+              </div>
 
-      {/* MOBILE STICKY CART BAR */}
+              <div className="pos-receipt-list">
+                {cart.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "50px 10px", color: "var(--muted)" }}>
+                    <div style={{ fontWeight: 800, fontSize: 14 }}>Belum Ada Pesanan</div>
+                    <div style={{ fontSize: 12, marginTop: 4 }}>Klik pada menu makanan / minuman di katalog sebelah kiri</div>
+                  </div>
+                ) : (
+                  cart.map((i, index) => (
+                    <div key={`${i.id}-${index}`} className="pos-cart-card">
+                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)", lineHeight: 1.3 }}>{i.name}</div>
+                          <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>Rp {rupiah(i.price)}</div>
+                        </div>
+                        <span style={{ fontWeight: 900, fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--text)" }}>
+                          Rp {rupiah(i.price * i.qty)}
+                        </span>
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 4 }}>
+                        <button className="btn btn-ghost" style={{ padding: 0, fontSize: 11, color: "var(--muted)", fontWeight: 700 }} onClick={() => openNoteEditor(index)}>
+                          {(i.notes || "").trim() ? `Catatan: ${i.notes}` : "+ Tambah Catatan"}
+                        </button>
+
+                        {/* Quantity Controls */}
+                        <div style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "var(--brandSoft)", border: "1px solid var(--border)", borderRadius: 999, padding: "2px 6px" }}>
+                          <button
+                            className="btn btn-ghost"
+                            style={{ width: 26, height: 26, minHeight: 0, padding: 0, fontSize: 15, fontWeight: 900, borderRadius: "50%", background: "var(--panel)", color: "var(--brand)" }}
+                            onClick={() => dec(index)}
+                            title="Kurangi"
+                          >
+                            -
+                          </button>
+                          <input
+                            type="number"
+                            className="input"
+                            style={{ width: 38, height: 26, textAlign: "center", padding: "0 2px", fontSize: 13, fontWeight: 800, fontFamily: "var(--font-mono)", border: "none", background: "transparent" }}
+                            value={i.qty}
+                            min={1}
+                            onChange={(e) => updateQty(index, parseInt(e.target.value) || 0)}
+                          />
+                          <button
+                            className="btn btn-ghost"
+                            style={{ width: 26, height: 26, minHeight: 0, padding: 0, fontSize: 15, fontWeight: 900, borderRadius: "50%", background: "var(--brand)", color: "#fff" }}
+                            onClick={() => inc(index)}
+                            title="Tambah"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      {noteOpenId === String(index) && (
+                        <div className="note-box" style={{ width: "100%", marginTop: 6, padding: 10 }}>
+                          <textarea
+                            className="input"
+                            style={{ minHeight: 50, fontSize: 12, padding: 8, borderRadius: 10 }}
+                            value={noteDraft}
+                            onChange={(e) => setNoteDraft(e.target.value)}
+                            placeholder="Contoh: Tanpa gula, pedas sedang..."
+                          />
+                          <div className="row" style={{ marginTop: 6, gap: 6 }}>
+                            <button className="btn btn-primary" onClick={() => saveNote(index)} style={{ fontSize: 11, padding: "4px 10px" }}>Simpan</button>
+                            <button className="btn" onClick={() => clearNote(index)} style={{ fontSize: 11, padding: "4px 10px" }}>Hapus</button>
+                            <button className="btn" onClick={() => { setNoteOpenId(null); setNoteDraft(""); }} style={{ fontSize: 11, padding: "4px 10px" }}>Batal</button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div style={{ marginTop: 14 }}>
+                <div className="row" style={{ justifyContent: "space-between", fontSize: 13 }}>
+                  <span style={{ color: "var(--muted)", fontWeight: 600 }}>Subtotal</span>
+                  <b style={{ fontFamily: "var(--font-mono)", fontSize: 14 }}>Rp {rupiah(subtotal)}</b>
+                </div>
+
+                <div className="row" style={{ justifyContent: "space-between", marginTop: 8, fontSize: 13 }}>
+                  <span style={{ color: "var(--muted)", fontWeight: 600 }}>Diskon</span>
+                  {canUsePromos() ? (
+                    <div className="row" style={{ gap: 4 }}>
+                      <button
+                        className={"btn " + (discountType === "nominal" ? "btn-primary" : "")}
+                        style={{ padding: "2px 8px", fontSize: 11, borderRadius: 8 }}
+                        onClick={() => setDiscountType("nominal")}
+                      >
+                        Rp
+                      </button>
+                      <button
+                        className={"btn " + (discountType === "persen" ? "btn-primary" : "")}
+                        style={{ padding: "2px 8px", fontSize: 11, borderRadius: 8 }}
+                        onClick={() => setDiscountType("persen")}
+                      >
+                        %
+                      </button>
+                      <input
+                        className="input"
+                        style={{ width: 80, textAlign: "right", padding: "4px 8px", fontSize: 12, borderRadius: 8 }}
+                        type="number"
+                        value={discount}
+                        onChange={(e) => setDiscount(Number(e.target.value || 0))}
+                      />
+                    </div>
+                  ) : (
+                    <span className="small" style={{ color: "var(--muted)" }}>Core+</span>
+                  )}
+                </div>
+
+                {canUsePromos() && appliedPromo && promoDiscountAmount > 0 && (
+                  <div className="row" style={{ justifyContent: "space-between", marginTop: 8, fontSize: 12, color: "var(--brand)", fontWeight: 700 }}>
+                    <span>Promo ({appliedPromo.name})</span>
+                    <b style={{ fontFamily: "var(--font-mono)" }}>- Rp {rupiah(promoDiscountAmount)}</b>
+                  </div>
+                )}
+
+                <div className="pos-cart-total-banner">
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", textTransform: "uppercase", fontWeight: 800, letterSpacing: 0.5 }}>Total Final</div>
+                      <div style={{ fontSize: 26, fontWeight: 900, fontFamily: "var(--font-mono)", color: "#FFFFFF", marginTop: 2, letterSpacing: -0.5 }}>
+                        Rp {rupiah(total)}
+                      </div>
+                    </div>
+                    <div style={{ padding: "6px 14px", borderRadius: 999, background: "rgba(255,255,255,0.2)", color: "#FFFFFF", fontSize: 12, fontWeight: 900, backdropFilter: "blur(4px)" }}>
+                      {cart.reduce((a, b) => a + b.qty, 0)} Items
+                    </div>
+                  </div>
+
+                  <button
+                    className="btn"
+                    style={{ width: "100%", marginTop: 16, padding: "14px 20px", borderRadius: 16, fontSize: 15, fontWeight: 900, background: "#FFFFFF", color: "#9A0002", border: "none", boxShadow: "0 6px 20px rgba(0,0,0,0.2)" }}
+                    disabled={cart.length === 0}
+                    onClick={() => { setPayOpen(true); setPaidAmount(0); setPaymentMethod("CASH"); }}
+                  >
+                    PROSES TRANSAKSI
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : activeTab === "ORDERS" ? (
+          <div style={{ flex: 1, overflowY: "auto", minWidth: 0, paddingRight: 4 }}>
+            <OrdersContent />
+          </div>
+        ) : (
+          <div style={{ flex: 1, overflowY: "auto", minWidth: 0, paddingRight: 4 }}>
+            <ShiftsContent />
+          </div>
+        )}
+      </div>
       {cart.length > 0 && !mobileCartOpen && !payOpen && !successDialog && !billSuccessDialog && (
         <div className="pos-mobile-bar" onClick={() => setMobileCartOpen(true)}>
           <div className="pos-mobile-bar-badge">{cart.reduce((a, i) => a + i.qty, 0)}</div>
@@ -1508,82 +1962,195 @@ export default function POSPage() {
         </>
       )}
 
-      {/* PAYMENT POPUP - DESKTOP (centered modal) */}
-      {payOpen && mode === "PAY_NOW" && (
-        <div className="pos-pay-desktop" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", placeItems: "center", padding: 16, zIndex: 50 }}>
-          <div className="card" style={{ width: 520, maxWidth: "100%" }}>
-            <div className="row">
-              <div className="h1">Pembayaran</div>
-              <div className="spacer" />
-              <button className="btn" onClick={() => setPayOpen(false)}>Tutup</button>
+      {/* DIALOG PEMBAYARAN PREMIUM (WIDE FORMAT 2-KOLOM) */}
+      {payOpen && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(8px)", display: "grid", placeItems: "center", padding: 20, zIndex: 99999 }}>
+          <div className="card" style={{ width: "100%", maxWidth: 680, borderRadius: 28, padding: 30, background: "var(--panel)", border: "1.5px solid var(--border)", boxShadow: "0 30px 80px rgba(0,0,0,0.3)", animation: "slideUp 0.25s ease-out" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 16, borderBottom: "1.5px solid var(--border)" }}>
+              <div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: "var(--text)" }}>Proses Transaksi Kasir</div>
+                <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 2 }}>Lengkapi detail tipe transaksi, meja, dan metode pembayaran</div>
+              </div>
+              <button className="btn btn-ghost" onClick={() => setPayOpen(false)} style={{ fontSize: 13, fontWeight: 800, padding: "8px 16px", borderRadius: 12 }}>Tutup Modal</button>
             </div>
 
-            <div className="row" style={{ marginTop: 12, gap: 12 }}>
-              <button
-                className={"btn " + (paymentMethod === "CASH" ? "btn-primary" : "")}
-                style={paymentMethodButtonStyle}
-                onClick={() => setPaymentMethod("CASH")}
-              >
-                CASH
-              </button>
-              <button
-                className={"btn " + (paymentMethod === "QRIS" ? "btn-primary" : "")}
-                style={paymentMethodButtonStyle}
-                onClick={() => setPaymentMethod("QRIS")}
-              >
-                QRIS
-              </button>
-            </div>
-
-            <div className="row" style={{ justifyContent: "space-between", marginTop: 12 }}>
-              <span className="small">Total</span>
-              <b>Rp {rupiah(total)}</b>
-            </div>
-
-            {paymentMethod === "CASH" && (
-              <>
-                <div style={{ marginTop: 10 }}>
-                  <div className="small">Uang dibayar</div>
-                  <input className="input" type="number" value={paidAmount} onChange={(e) => setPaidAmount(Number(e.target.value || 0))} />
-                </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
-                  {[1000, 2000, 5000, 10000, 20000, 50000, 100000].map((nom) => (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginTop: 20 }}>
+              {/* Kolom Kiri: Tipe Order & Detail Meja */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>1. Tipe Pembayaran</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, background: "var(--input-bg)", padding: 5, borderRadius: 16, border: "1px solid var(--border)" }}>
                     <button
-                      key={nom}
-                      className="btn"
-                      style={{ padding: "10px 14px", fontSize: 13, fontWeight: 500, fontFamily: "var(--font-mono)", letterSpacing: -0.3 }}
-                      onClick={() => setPaidAmount((prev) => prev + nom)}
+                      className={"btn " + (mode === "PAY_NOW" ? "btn-primary" : "btn-ghost")}
+                      style={{ borderRadius: 12, padding: "10px", fontWeight: 900, fontSize: 13, justifyContent: "center" }}
+                      onClick={() => { setMode("PAY_NOW"); setErr(null); }}
                     >
-                      +{rupiah(nom)}
+                      Direct Pay
                     </button>
-                  ))}
-                  <button
-                    className="btn"
-                    style={{ padding: "10px 14px", fontSize: 13, fontWeight: 500 }}
-                    onClick={() => setPaidAmount(total)}
-                  >
-                    Uang Pas
-                  </button>
-                  <button
-                    className="btn"
-                    style={{ padding: "10px 14px", fontSize: 13, fontWeight: 500, color: "var(--danger)" }}
-                    onClick={() => setPaidAmount(0)}
-                  >
-                    Reset
-                  </button>
+                    <button
+                      className={"btn " + (mode === "PAY_LATER" ? "btn-primary" : "btn-ghost")}
+                      style={{ borderRadius: 12, padding: "10px", fontWeight: 900, fontSize: 13, justifyContent: "center" }}
+                      onClick={() => { setMode("PAY_LATER"); setErr(null); }}
+                    >
+                      Open Bill
+                    </button>
+                  </div>
                 </div>
-                <div className="row" style={{ justifyContent: "space-between", marginTop: 10 }}>
-                  <span className="small">Kembalian</span>
-                  <b>Rp {rupiah(Math.max(0, paidAmount - total))}</b>
+
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>2. Mode Order</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, background: "var(--input-bg)", padding: 5, borderRadius: 16, border: "1px solid var(--border)" }}>
+                    <button
+                      className={"btn " + (orderType === "DINE_IN" ? "btn-primary" : "btn-ghost")}
+                      style={{ borderRadius: 12, padding: "10px", fontWeight: 900, fontSize: 13, justifyContent: "center" }}
+                      onClick={() => setOrderType("DINE_IN")}
+                    >
+                      🍽️ Dine In
+                    </button>
+                    <button
+                      className={"btn " + (orderType === "TAKEAWAY" ? "btn-primary" : "btn-ghost")}
+                      style={{ borderRadius: 12, padding: "10px", fontWeight: 900, fontSize: 13, justifyContent: "center" }}
+                      onClick={() => setOrderType("TAKEAWAY")}
+                    >
+                      🥡 Takeaway
+                    </button>
+                  </div>
                 </div>
-              </>
+
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+                    3. Nomor Meja {mode === "PAY_LATER" ? "(Wajib)" : "(Opsional)"}
+                  </div>
+                  <input
+                    className="input"
+                    style={{ borderRadius: 14, padding: "10px 14px", fontSize: 14, fontWeight: 800, fontFamily: "var(--font-mono)" }}
+                    value={tableNo}
+                    onChange={(e) => setTableNo(e.target.value)}
+                    placeholder="Contoh: Meja 05"
+                  />
+                </div>
+
+                {/* Box Ringkasan Bill */}
+                <div style={{ background: "var(--brandSoft)", border: "1px solid var(--brand2)", borderRadius: 20, padding: 18, marginTop: "auto" }}>
+                  <div style={{ fontSize: 11, color: "var(--brand)", textTransform: "uppercase", fontWeight: 900, letterSpacing: 0.5 }}>Total Tagihan Pesanan</div>
+                  <div style={{ fontSize: 28, fontWeight: 900, fontFamily: "var(--font-mono)", color: "var(--brand)", marginTop: 4, letterSpacing: -0.5 }}>
+                    Rp {rupiah(total)}
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4, fontWeight: 600 }}>
+                    {cart.reduce((a, i) => a + i.qty, 0)} Item menu di dalam keranjang
+                  </div>
+                </div>
+              </div>
+
+              {/* Kolom Kanan: Pembayaran & Nominal Uang */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                {mode === "PAY_NOW" ? (
+                  <>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>3. Metode Pembayaran</div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                        <button
+                          className={"btn " + (paymentMethod === "CASH" ? "btn-primary" : "")}
+                          style={{ padding: "12px", borderRadius: 14, fontWeight: 900, fontSize: 13, justifyContent: "center" }}
+                          onClick={() => setPaymentMethod("CASH")}
+                        >
+                          CASH (TUNAI)
+                        </button>
+                        <button
+                          className={"btn " + (paymentMethod === "QRIS" ? "btn-primary" : "")}
+                          style={{ padding: "12px", borderRadius: 14, fontWeight: 900, fontSize: 13, justifyContent: "center" }}
+                          onClick={() => setPaymentMethod("QRIS")}
+                        >
+                          QRIS (DIGITAL)
+                        </button>
+                      </div>
+                    </div>
+
+                    {paymentMethod === "CASH" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                        <div>
+                          <div style={{ fontSize: 12, fontWeight: 800, color: "var(--muted)", marginBottom: 6 }}>Nominal Dibayar (Rp)</div>
+                          <input
+                            className="input"
+                            type="number"
+                            style={{ fontSize: 20, fontWeight: 900, fontFamily: "var(--font-mono)", padding: "12px 16px", borderRadius: 14 }}
+                            value={paidAmount || ""}
+                            onChange={(e) => setPaidAmount(Number(e.target.value || 0))}
+                            placeholder="0"
+                          />
+                        </div>
+
+                        {/* Quick Nominal Chips */}
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                          {[1000, 2000, 5000, 10000, 20000, 50000, 100000].map((nom) => (
+                            <button
+                              key={nom}
+                              className="btn"
+                              style={{ padding: "6px 10px", fontSize: 11, fontWeight: 700, fontFamily: "var(--font-mono)", borderRadius: 10 }}
+                              onClick={() => setPaidAmount((prev) => prev + nom)}
+                            >
+                              +{rupiah(nom)}
+                            </button>
+                          ))}
+                          <button
+                            className="btn btn-primary"
+                            style={{ padding: "6px 10px", fontSize: 11, fontWeight: 800, borderRadius: 10 }}
+                            onClick={() => setPaidAmount(total)}
+                          >
+                            Uang Pas
+                          </button>
+                          <button
+                            className="btn"
+                            style={{ padding: "6px 10px", fontSize: 11, fontWeight: 700, color: "var(--danger)", borderRadius: 10 }}
+                            onClick={() => setPaidAmount(0)}
+                          >
+                            Reset
+                          </button>
+                        </div>
+
+                        {/* Display Kembalian */}
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderRadius: 14, background: "var(--input-bg)", border: "1px solid var(--border)", marginTop: 4 }}>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--muted)" }}>Kembalian</span>
+                          <b style={{ fontSize: 18, fontWeight: 900, fontFamily: "var(--font-mono)", color: paidAmount >= total ? "#10B981" : "var(--text)" }}>
+                            Rp {rupiah(Math.max(0, paidAmount - total))}
+                          </b>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div style={{ padding: 20, borderRadius: 18, background: "var(--input-bg)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 8, height: "100%", justifyContent: "center" }}>
+                    <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text)" }}>Mode Open Bill (Simpan Meja)</div>
+                    <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.5 }}>
+                      Order ini akan disimpan atas nomor meja yang dipilih. Pelanggan dapat melakukan pembayaran di kemudian hari setelah selesai makan/minum.
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {err && <div style={{ marginTop: 14, color: "var(--danger)", fontWeight: 800, fontSize: 13 }}>{err}</div>}
+
+            {mode === "PAY_NOW" ? (
+              <button
+                className="btn btn-primary"
+                style={{ width: "100%", marginTop: 22, padding: "16px 24px", borderRadius: 18, fontSize: 16, fontWeight: 900, letterSpacing: 0.5 }}
+                onClick={checkoutPayNow}
+              >
+                SELESAIKAN TRANSAKSI & PRINT STRUK
+              </button>
+            ) : (
+              <button
+                className="btn btn-primary"
+                style={{ width: "100%", marginTop: 22, padding: "16px 24px", borderRadius: 18, fontSize: 16, fontWeight: 900, letterSpacing: 0.5 }}
+                onClick={async () => {
+                  await savePayLater();
+                  setPayOpen(false);
+                }}
+              >
+                SIMPAN ORDER MEJA (OPEN BILL)
+              </button>
             )}
-
-            {err && <div style={{ marginTop: 10, color: "var(--danger)", fontWeight: 800 }}>{err}</div>}
-
-            <button className="btn btn-primary" style={{ width: "100%", marginTop: 12 }} onClick={checkoutPayNow}>
-              Selesaikan & Print Struk
-            </button>
           </div>
         </div>
       )}
@@ -1716,87 +2283,7 @@ export default function POSPage() {
         </>
       )}
 
-      {/* SHIFT PROMPT (POS) - DESKTOP */}
-      {shiftPromptOpen && !activeShift && (
-        <div
-          className="pos-shift-desktop"
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.55)",
-            placeItems: "center",
-            padding: 16,
-            zIndex: 70,
-          }}
-        >
-          <div className="card" style={{ width: 520, maxWidth: "100%" }}>
-            <div className="h1">Shift Belum Dibuka</div>
-            <div className="small" style={{ marginTop: 10, lineHeight: 1.6 }}>
-              Sebelum kasir mulai transaksi, shift harus dibuka dulu agar semua pembayaran tercatat ke sesi kasir yang aktif.
-            </div>
-
-            <div
-              style={{
-                marginTop: 14,
-                padding: 12,
-                borderRadius: 14,
-                border: "1px solid var(--border)",
-                background: "var(--brandSoft)",
-                fontSize: 13,
-                lineHeight: 1.6,
-              }}
-            >
-              Buka shift dulu di halaman <b>Shift</b>, lalu kembali ke POS untuk lanjut transaksi.
-            </div>
-
-            <div className="row" style={{ marginTop: 16 }}>
-              <button className="btn btn-primary" onClick={() => r.push("/shifts")}>
-                Buka Halaman Shift
-              </button>
-              <button className="btn" onClick={() => r.push("/dashboard")}>
-                Ke Dashboard
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* SHIFT PROMPT (POS) - MOBILE (bottom sheet) */}
-      {shiftPromptOpen && !activeShift && (
-        <>
-          <div className="pos-shift-mobile-overlay" />
-          <div className="pos-shift-mobile">
-            <div style={{ width: 40, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
-            <div className="h1" style={{ fontSize: 20 }}>Shift Belum Dibuka</div>
-            <div className="small" style={{ marginTop: 12, lineHeight: 1.7, fontSize: 14 }}>
-              Sebelum kasir mulai transaksi, shift harus dibuka dulu agar semua pembayaran tercatat ke sesi kasir yang aktif.
-            </div>
-
-            <div
-              style={{
-                marginTop: 14,
-                padding: 14,
-                borderRadius: 14,
-                border: "1px solid var(--border)",
-                background: "var(--brandSoft)",
-                fontSize: 14,
-                lineHeight: 1.6,
-              }}
-            >
-              Buka shift dulu di halaman <b>Shift</b>, lalu kembali ke POS untuk lanjut transaksi.
-            </div>
-
-            <div style={{ marginTop: 18, display: "grid", gap: 10 }}>
-              <button className="btn btn-primary" style={{ width: "100%", padding: "14px 0", fontSize: 15, fontWeight: 800 }} onClick={() => r.push("/shifts")}>
-                Buka Halaman Shift
-              </button>
-              <button className="btn" style={{ width: "100%", padding: "12px 0", fontSize: 14 }} onClick={() => r.push("/dashboard")}>
-                Ke Dashboard
-              </button>
-            </div>
-          </div>
-        </>
-      )}
+      {/* End of table warning */}
 
       {/* SUCCESS DIALOG (PAY NOW) - DESKTOP */}
       {successDialog && (

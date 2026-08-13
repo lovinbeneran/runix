@@ -213,7 +213,7 @@ export async function printReceipt(data: BluetoothReceiptData) {
   bytes.push(...ALIGN_CENTER);
   bytes.push(...BOLD_ON);
   bytes.push(...DOUBLE_WIDTH);
-  bytes.push(...textToBytes(data.storeName || "TerraPOS"));
+  bytes.push(...textToBytes(data.storeName || "RuniX"));
   bytes.push(LF);
   bytes.push(...NORMAL_SIZE);
   bytes.push(...BOLD_OFF);
@@ -310,7 +310,7 @@ export async function printReceipt(data: BluetoothReceiptData) {
   // Watermark
   if (data.showWatermark !== false) {
     bytes.push(LF);
-    bytes.push(...textToBytes("Powered by TerraPOS"));
+    bytes.push(...textToBytes("Powered by RuniX"));
     bytes.push(LF);
   }
 

@@ -19,7 +19,7 @@ export default function SettingsPage() {
   const toast = useToast();
 
   // Store info
-  const [storeName, setStoreName] = useState("TerraPOS");
+  const [storeName, setStoreName] = useState("RuniX");
   const [address, setAddress] = useState("");
   const [footer, setFooter] = useState("Terima kasih.");
   const [phone, setPhone] = useState("");
@@ -41,7 +41,7 @@ export default function SettingsPage() {
         const snap = await getDoc(doc(db, `tenants/${tenantId}/settings/main`));
         if (snap.exists()) {
           const d: any = snap.data();
-          setStoreName(d.storeName || "TerraPOS");
+          setStoreName(d.storeName || "RuniX");
           setAddress(d.address || "");
           setFooter(d.footer || "Terima kasih.");
           setPhone(d.phone || "");
@@ -80,7 +80,7 @@ export default function SettingsPage() {
     }
   }
 
-  if (loading || loadingRole) return <TerraPage><SkeletonStyles /><PageSkeleton cards={2} /></TerraPage>;
+  // Direct render for seamless page transition
 
   if (role !== "owner" && role !== "developer") {
     return (
@@ -150,11 +150,6 @@ export default function SettingsPage() {
           accent-color: var(--brand);
         }
       `}</style>
-
-      <PageHeader title="Pengaturan Umum" subtitle="Konfigurasi toko & pajak">
-        <button className="btn" onClick={() => r.push("/dashboard")}>Dashboard</button>
-        <button className="btn" onClick={() => r.push("/settings/receipt")}>Struk</button>
-      </PageHeader>
 
       {/* Section: Info Toko */}
       <div className="settings-section">

@@ -8,7 +8,7 @@ export default function PWARegister() {
     if (!("serviceWorker" in navigator)) return;
 
     // Prevent infinite reload loop: only reload once per SW update
-    const RELOAD_KEY = "terrapos_sw_reload";
+    const RELOAD_KEY = "runix_sw_reload";
 
     navigator.serviceWorker.register("/sw.js").then((reg) => {
       // Cek update setiap kali halaman dibuka

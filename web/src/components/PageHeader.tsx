@@ -6,10 +6,10 @@ import { useTenant } from "@/hooks/useTenant";
 import { useStaff } from "@/hooks/useStaff";
 
 /**
- * PageHeader - Shared header component untuk semua halaman TerraPOS
+ * PageHeader - Shared header component untuk semua halaman RuniX
  * 
  * Desain sama dengan POS page:
- * - Brand title "terra POS" (atau custom page title)
+ * - Brand title "RuniX" (atau custom page title)
  * - LevelBadge
  * - Staff badge (jika aktif)
  * - Email badge
@@ -19,169 +19,239 @@ import { useStaff } from "@/hooks/useStaff";
  */
 
 type Props = {
-  /** Optional page title override (default: shows "terra POS") */
+  /** Optional page title override (default: shows "RuniX") */
   title?: string;
   /** Optional subtitle below badges */
   subtitle?: string;
+  /** Custom size preset: 'normal' for regular pages, 'large' for Orders & Shift pages */
+  size?: "normal" | "large";
   /** Navigation/action buttons - rendered on the right side */
   children?: React.ReactNode;
 };
 
-export default function PageHeader({ title, subtitle, children }: Props) {
+export default function PageHeader({ title, subtitle, size = "large", children }: Props) {
   const { email } = useTenant();
   const { activeStaff, switchStaff, staffEnabled } = useStaff();
 
   return (
     <>
       <style>{`
-        .page-header{
-          display:flex;
-          align-items:flex-start;
-          gap:12px;
+        /* ===== ULTRA-PREMIUM MODERN GLASSMORPHISM PAGE HEADER ===== */
+        .page-header-card {
+          position: relative;
+          background: var(--panel);
+          border: 1px solid var(--border);
+          border-radius: 24px;
+          padding: 16px 24px;
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04), 0 2px 6px rgba(0, 0, 0, 0.02);
+          transition: all 0.25s ease;
+          overflow: hidden;
         }
-        .page-header-left{
-          flex:1;
-          min-width:0;
-        }
-        .page-header-brand{
-          font-size:22px;
-          font-weight:800;
-          font-family:var(--font-primary);
-          line-height:1;
-        }
-        .page-header-title{
-          font-size:18px;
-          font-weight:800;
-          line-height:1.2;
-          color:var(--text);
-          margin-top:2px;
-        }
-        .page-header-badges{
-          display:flex;
-          flex-wrap:wrap;
-          gap:6px;
-          align-items:center;
-          margin-top:8px;
-        }
-        .page-header-badge{
-          display:inline-flex;
-          align-items:center;
-          padding:4px 8px;
-          border-radius:999px;
-          background:var(--input-bg);
-          border:1px solid var(--border);
-          font-size:11px;
-          font-weight:600;
-          color:var(--muted);
-          white-space:nowrap;
-          overflow:hidden;
-          text-overflow:ellipsis;
-          max-width:180px;
-        }
-        .page-header-badge-staff{
-          display:inline-flex;
-          align-items:center;
-          gap:4px;
-          padding:4px 10px;
-          border-radius:999px;
-          background:rgba(213,149,103,0.15);
-          border:1px solid var(--brand);
-          font-size:11px;
-          font-weight:800;
-          color:var(--brand);
-          cursor:pointer;
-          white-space:nowrap;
-        }
-        .page-header-badge-staff:active{
-          transform:scale(0.95);
-        }
-        .page-header-subtitle{
-          font-size:12px;
-          color:var(--muted);
-          margin-top:6px;
-          font-weight:500;
-        }
-        .page-header-nav{
-          display:flex;
-          flex-wrap:wrap;
-          gap:6px;
-          align-items:center;
+        .page-header-card::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 3px;
+          background: linear-gradient(90deg, var(--brand, #9a0002), #ff4d4f, var(--brand, #9a0002));
+          opacity: 0.85;
         }
 
-        @media(max-width:640px){
-          .page-header{
-            flex-direction:column;
-            gap:10px;
+        .page-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+        }
+        .page-header-left {
+          flex: 1;
+          min-width: 0;
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          flex-wrap: wrap;
+        }
+        .page-header-brand-group {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .page-header-brand-logo {
+          height: 32px;
+          width: auto;
+          object-fit: contain;
+          transition: transform 0.2s ease;
+        }
+        .page-header-brand-logo:hover {
+          transform: scale(1.04);
+        }
+        .page-header-title {
+          font-size: 20px;
+          font-weight: 900;
+          line-height: 1.2;
+          color: var(--text);
+          letter-spacing: -0.3px;
+        }
+        .page-header-subtitle {
+          font-size: 12px;
+          color: var(--muted);
+          margin-top: 3px;
+          font-weight: 600;
+        }
+        .page-header-divider {
+          width: 1px;
+          height: 24px;
+          background: var(--border);
+        }
+
+        .page-header-badges {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          align-items: center;
+        }
+        .page-header-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 14px;
+          border-radius: 999px;
+          background: var(--input-bg);
+          border: 1px solid var(--border);
+          font-size: 11.5px;
+          font-weight: 700;
+          color: var(--text);
+          white-space: nowrap;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        }
+        .page-header-badge-staff {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 14px;
+          border-radius: 999px;
+          background: var(--brandSoft, rgba(154, 0, 2, 0.08));
+          border: 1.5px solid var(--brand, #9a0002);
+          font-size: 11.5px;
+          font-weight: 900;
+          color: var(--brand, #9a0002);
+          cursor: pointer;
+          white-space: nowrap;
+          transition: all 0.2s ease;
+        }
+        .page-header-badge-staff:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(154, 0, 2, 0.18);
+        }
+        .page-header-badge-staff:active {
+          transform: scale(0.96);
+        }
+
+        /* LARGE PRESET FOR ORDERS & SHIFTS PAGE */
+        .page-header-card-large {
+          padding: 24px 30px !important;
+          border-radius: 28px !important;
+        }
+        .page-header-card-large .page-header-brand-logo {
+          height: 44px !important;
+        }
+        .page-header-card-large .page-header-title {
+          font-size: 25px !important;
+          font-weight: 900 !important;
+        }
+        .page-header-card-large .page-header-badge {
+          padding: 8px 18px !important;
+          font-size: 12.5px !important;
+        }
+        .page-header-card-large .page-header-badge-staff {
+          padding: 8px 20px !important;
+          font-size: 12.5px !important;
+        }
+
+        .page-header-nav {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          align-items: center;
+        }
+
+        @media (max-width: 768px) {
+          .page-header-card {
+            padding: 14px 16px;
+            border-radius: 20px;
           }
-          .page-header-brand{
-            font-size:20px;
+          .page-header {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
           }
-          .page-header-title{
-            font-size:16px;
+          .page-header-left {
+            gap: 10px;
           }
-          .page-header-badges{
-            gap:5px;
-            margin-top:6px;
+          .page-header-divider {
+            display: none;
           }
-          .page-header-badge{
-            font-size:10px;
-            padding:3px 7px;
-            max-width:150px;
+          .page-header-title {
+            font-size: 17px;
           }
-          .page-header-badge-staff{
-            font-size:10px;
-            padding:3px 8px;
+          .page-header-nav {
+            width: 100%;
           }
-          .page-header-nav{
-            width:100%;
-            gap:5px;
-          }
-          .page-header-nav .btn{
-            flex:1;
-            min-width:0;
-            font-size:11px !important;
-            padding:8px 6px !important;
-            text-align:center;
-            justify-content:center;
+          .page-header-nav .btn {
+            flex: 1;
+            justify-content: center;
+            font-size: 12px !important;
+            padding: 9px 10px !important;
           }
         }
       `}</style>
 
-      <div className="card">
+      <div className={`page-header-card ${size === "large" ? "page-header-card-large" : ""}`}>
         <div className="page-header">
           <div className="page-header-left">
-            {/* Brand */}
-            <div className="page-header-brand">
-              terra <span style={{ color: "var(--brand)" }}>POS</span>
+            {/* Brand Logo & Title */}
+            <div className="page-header-brand-group">
+              <img className="page-header-brand-logo" src="/logo-header.png" alt="RuniX" />
+              {title && (
+                <>
+                  <div className="page-header-divider" />
+                  <div>
+                    <div className="page-header-title">{title}</div>
+                    {subtitle && <div className="page-header-subtitle">{subtitle}</div>}
+                  </div>
+                </>
+              )}
             </div>
-
-            {/* Page title (if different from brand) */}
-            {title && <div className="page-header-title">{title}</div>}
 
             {/* Badges row */}
             <div className="page-header-badges">
               <LevelBadge size="small" />
               {activeStaff && (
-                <span
+                <button
+                  type="button"
                   className="page-header-badge-staff"
                   onClick={switchStaff}
                   title="Klik untuk ganti staff"
                 >
-                  &#128100; {activeStaff.staffName}
+                  <svg style={{ width: 14, height: 14 }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>{activeStaff.staffName}</span>
+                </button>
+              )}
+              {email && (
+                <span className="page-header-badge">
+                  <svg style={{ width: 13, height: 13, opacity: 0.7 }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <span>{email}</span>
                 </span>
               )}
-              <span className="page-header-badge">
-                {email || "-"}
-              </span>
             </div>
-
-            {/* Subtitle */}
-            {subtitle && (
-              <div className="page-header-subtitle">{subtitle}</div>
-            )}
           </div>
 
-          {/* Navigation buttons */}
+          {/* Navigation/Action buttons */}
           {children && (
             <div className="page-header-nav">
               {children}

@@ -226,9 +226,9 @@ export default function DevUsersPage() {
               </div>
               <select className="input" style={{ width: 90, fontSize: 12, padding: "6px 8px" }} value={u.level} onChange={(e) => changeLevel(u, e.target.value)}>
                 <option value="free">Free</option>
-                <option value="seed">Seed</option>
-                <option value="core">Core</option>
-                <option value="orbit">Orbit</option>
+                <option value="delta">Delta</option>
+                <option value="omega">Omega</option>
+                <option value="zeta">Zeta</option>
               </select>
               <div className="usr-actions">
                 <button className="btn" style={{ fontSize: 11, padding: "6px 10px" }} onClick={() => openAssignModal(u)}>Assign</button>

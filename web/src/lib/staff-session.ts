@@ -1,7 +1,7 @@
 /**
  * Staff Session Management
  * 
- * Sistem staff account berbasis PIN untuk TerraPOS.
+ * Sistem staff account berbasis PIN untuk RuniX.
  * - Owner tetap login via Firebase Auth (persistent)
  * - Staff (kasir, barista, dll) login dengan PIN 4-6 digit
  * - Staff data disimpan di Firestore: tenants/{tenantId}/staffAccounts/{id}
@@ -32,9 +32,8 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
-// ============ TYPES ============
-
-export type StaffRole = "kasir" | "barista" | "admin" | "manager";
+// Delta (Tier 1 - Akses Dasar Kasir/Staff), Omega (Tier 2 - Akses Admin/Supervisor), Zeta (Tier 3 - Akses Tertinggi Owner/Manager)
+export type StaffRole = "delta" | "omega" | "zeta";
 
 export type StaffAccount = {
   id: string;
@@ -55,7 +54,7 @@ export type ActiveStaffSession = {
 
 // ============ CONSTANTS ============
 
-const ACTIVE_STAFF_KEY = "terrapos_active_staff";
+const ACTIVE_STAFF_KEY = "runix_active_staff";
 const STAFF_COLLECTION = "staffAccounts";
 
 // ============ PIN HASHING ============
@@ -66,7 +65,7 @@ const STAFF_COLLECTION = "staffAccounts";
  */
 export async function hashPin(pin: string): Promise<string> {
   const encoder = new TextEncoder();
-  const data = encoder.encode(`terrapos_staff_pin_${pin}_salt2024`);
+  const data = encoder.encode(`runix_staff_pin_${pin}_salt2024`);
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");

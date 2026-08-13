@@ -71,7 +71,7 @@ export default function DevBrandColorsPage() {
   }
 
   async function handleForceReload() {
-    if (!confirm("Reload SEMUA client yang sedang membuka TerraPOS?")) return;
+    if (!confirm("Reload SEMUA client yang sedang membuka RuniX?")) return;
     setReloading(true);
     try {
       await triggerForceReload(email);
@@ -160,7 +160,7 @@ export default function DevBrandColorsPage() {
       {/* FORCE RELOAD */}
       <div className="card" style={{ marginTop: 14 }}>
         <div style={{ fontWeight: 900, fontSize: 14 }}>Force Reload All Clients</div>
-        <div className="small" style={{ marginTop: 4 }}>Paksa semua browser/HP yang membuka TerraPOS untuk reload. Gunakan dengan hati-hati.</div>
+        <div className="small" style={{ marginTop: 4 }}>Paksa semua browser/HP yang membuka RuniX untuk reload. Gunakan dengan hati-hati.</div>
         <button className="btn btn-danger" style={{ width: "100%", marginTop: 14 }} onClick={handleForceReload} disabled={reloading}>
           {reloading ? "Mengirim..." : "Reload Semua Client Sekarang"}
         </button>

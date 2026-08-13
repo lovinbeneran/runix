@@ -115,13 +115,13 @@ export const DEFAULT_LANDING_CONFIG: LandingConfig = {
   ],
   ctaTitle: "Siap digitalisasi outlet kamu?",
   ctaSubtitle: "Buat akun gratis, setup tenant, dan langsung terima order hari ini.",
-  footerText: "TerraPOS — POS modern untuk cafe & resto.",
+  footerText: "RuniX — POS modern untuk cafe & resto.",
 };
 
 // ============ FIRESTORE ============
 
 const FIRESTORE_DOC = "system/landingPage";
-const STORAGE_KEY = "terrapos_landing_config";
+const STORAGE_KEY = "runix_landing_config";
 
 /**
  * Get cached landing config from localStorage

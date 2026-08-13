@@ -1,48 +1,43 @@
 "use client";
 
 import React from "react";
+import { usePathname } from "next/navigation";
+import AdminShell from "@/components/AdminShell";
+import PageSlideTransition from "@/components/PageSlideTransition";
+
+// Explicit list of Admin routes where persistent Header & Dock Navigation must appear
+const ADMIN_ROUTES = [
+  "/dashboard",
+  "/products",
+  "/staff-accounts",
+  "/promos",
+  "/reports",
+  "/settings",
+  "/printer",
+  "/dev",
+];
 
 export default function TerraPage({
   children,
-  maxWidth = 1200,
+  maxWidth = 1440,
   noPadding = false,
 }: {
   children: React.ReactNode;
   maxWidth?: number;
   noPadding?: boolean;
 }) {
+  const pathname = usePathname();
+  
+  // Check if current route matches any designated Admin routes
+  const isAdminRoute = ADMIN_ROUTES.some((route) => pathname.startsWith(route));
+
+  if (!isAdminRoute) {
+    return <PageSlideTransition>{children}</PageSlideTransition>;
+  }
+
   return (
-    <>
-      <style>{`
-        .terra-page{
-          min-height: 100vh;
-          min-height: 100dvh;
-          background: var(--bg);
-          transition: background 0.25s ease;
-        }
-        .terra-container{
-          max-width: ${maxWidth}px;
-          margin: 0 auto;
-          padding: ${noPadding ? "0" : "16px"};
-          padding-bottom: ${noPadding ? "0" : "calc(24px + var(--safe-bottom, 0px))"};
-          animation: fadeIn 0.2s ease-out;
-          display: flex;
-          flex-direction: column;
-          gap: 14px;
-        }
-        @media (max-width: 768px) {
-          .terra-container {
-            padding: ${noPadding ? "0" : "12px"};
-            padding-bottom: ${noPadding ? "0" : "calc(20px + var(--safe-bottom, 0px))"};
-            gap: 12px;
-          }
-        }
-      `}</style>
-      <div className="terra-page">
-        <div className="terra-container">
-          {children}
-        </div>
-      </div>
-    </>
+    <AdminShell>
+      <PageSlideTransition>{children}</PageSlideTransition>
+    </AdminShell>
   );
 }

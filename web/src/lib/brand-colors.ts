@@ -1,5 +1,5 @@
 /**
- * TerraPOS Brand Colors - Developer Customization
+ * RuniX Brand Colors - Developer Customization
  *
  * Warna bisa diubah oleh developer dari /dev console.
  * Disimpan di Firestore: system/brandColors
@@ -52,42 +52,42 @@ export type BrandColorConfig = {
 // ============ DEFAULTS ============
 
 export const DEFAULT_BRAND_COLORS: BrandColorConfig = {
-  // Primary brand (brown/coffee TerraPOS)
-  brand: "#d59567",
-  brand2: "#e4b896",
-  brandSoft: "#fdf5ef",
-  brandHover: "#b87a4f",
+  // Primary brand (#9A0002 & #EFE6DE)
+  brand: "#9A0002",
+  brand2: "#EFE6DE",
+  brandSoft: "#F9F4F0",
+  brandHover: "#780002",
 
   // Light mode backgrounds
-  bgLight: "#faf8f6",
-  panelLight: "#ffffff",
+  bgLight: "#FAF8F6",
+  panelLight: "#FFFFFF",
 
   // Dark mode backgrounds
-  bgDark: "#110e0b",
-  panelDark: "#1c1814",
+  bgDark: "#110E0B",
+  panelDark: "#1C1814",
 
   // Light borders
-  borderLight: "#e8e0d8",
+  borderLight: "#EFE6DE",
 
   // Dark borders
   borderDark: "#302820",
 
   // Light text
-  textLight: "#1f1710",
-  mutedLight: "#7a6b5e",
+  textLight: "#1F1710",
+  mutedLight: "#7A6B5E",
 
   // Dark text
-  textDark: "#f5f0eb",
-  mutedDark: "#a89888",
+  textDark: "#F5F0EB",
+  mutedDark: "#A89888",
 
   // Semantic colors
-  danger: "#dc4444",
-  success: "#2d9b6a",
-  warning: "#d4880a",
+  danger: "#DC4444",
+  success: "#2D9B6A",
+  warning: "#D4880A",
 
   // Input backgrounds
-  inputBgLight: "#faf7f4",
-  inputBgDark: "#221e19",
+  inputBgLight: "#FAF7F4",
+  inputBgDark: "#221E19",
 };
 
 // ============ COLOR PRESETS / TEMPLATES ============
@@ -109,7 +109,7 @@ export const COLOR_PRESETS: ColorPreset[] = [
   {
     id: "terra-pink",
     name: "Terra Pink",
-    description: "Warna pink klasik TerraPOS",
+    description: "Warna pink klasik RuniX",
     colors: {
       brand: "#e6739d",
       brand2: "#f0a0be",
@@ -292,7 +292,7 @@ export const COLOR_PRESETS: ColorPreset[] = [
 
 // ============ LOCAL STORAGE ============
 
-const STORAGE_KEY = "terrapos_brand_colors";
+const STORAGE_KEY = "runix_brand_colors";
 
 export function getCachedBrandColors(): BrandColorConfig | null {
   if (typeof window === "undefined") return null;

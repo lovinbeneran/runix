@@ -198,7 +198,7 @@ export default function TablesPage() {
           <button className="btn" disabled={tables.length === 0} onClick={() => {
             printQRBatchHTML(
               tables.map((t) => ({ tableNumber: t.number, tableName: t.name })),
-              tenantId, origin, "TerraPOS"
+              tenantId, origin, "RuniX"
             );
           }}>
             🖨️ Print Semua QR

@@ -1,6 +1,6 @@
 {
   "projects": {
-    "default": "terraposid"
+    "default": "runix-pos"
   },
   "targets": {},
   "etags": {}

@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * TerraPOS Advanced In-App Notifications v2
+ * RuniX Advanced In-App Notifications v2
  * ============================================================
  *
  * Sistem notifikasi lengkap berbasis Firestore (tanpa Cloud Functions).
@@ -96,7 +96,7 @@ const NOTIF_COLLECTION = "notifications";
 const MAX_NOTIFICATIONS = 50;
 
 // Legacy localStorage key prefix (for backward compat)
-const NOTIF_READ_KEY_PREFIX = "terrapos_notif_read_";
+const NOTIF_READ_KEY_PREFIX = "runix_notif_read_";
 
 // ============ READ/DISMISS STATUS (Firestore-backed) ============
 

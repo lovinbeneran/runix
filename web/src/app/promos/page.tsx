@@ -207,9 +207,7 @@ export default function PromosPage() {
     }
   }
 
-  if (loading || loadingRole) {
-    return <TerraPage><SkeletonStyles /><PageSkeleton cards={3} /></TerraPage>;
-  }
+  // Direct render for seamless page transition
 
   if (!canAccessLevel("promos")) {
     return (

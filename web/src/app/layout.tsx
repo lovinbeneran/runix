@@ -10,7 +10,7 @@ import MaintenanceGuard from "@/components/MaintenanceGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 export const metadata = {
-  title: "TerraPOS",
+  title: "RuniX",
   description: "POS warkop multi-tenant",
   manifest: "/manifest.json",
   icons: {

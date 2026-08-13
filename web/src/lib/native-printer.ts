@@ -65,8 +65,8 @@ export async function connect(address: string): Promise<{ name: string; address:
   const result = await BluetoothPrinter.connect({ address });
   // Simpan untuk auto-reconnect
   if (typeof localStorage !== "undefined") {
-    localStorage.setItem("terrapos_bt_address", address);
-    localStorage.setItem("terrapos_bt_name", result.name || address);
+    localStorage.setItem("runix_bt_address", address);
+    localStorage.setItem("runix_bt_name", result.name || address);
   }
   return result;
 }
@@ -91,7 +91,7 @@ export async function isConnected(): Promise<{ connected: boolean; name: string 
  */
 export async function autoReconnect(): Promise<boolean> {
   if (typeof localStorage === "undefined") return false;
-  const address = localStorage.getItem("terrapos_bt_address");
+  const address = localStorage.getItem("runix_bt_address");
   if (!address) return false;
   try {
     await connect(address);
@@ -145,7 +145,7 @@ export async function printReceipt(data: ReceiptData): Promise<void> {
   output += CMD.ALIGN_CENTER;
   output += CMD.BOLD_ON;
   output += CMD.DOUBLE_WIDTH;
-  output += (data.storeName || "TerraPOS") + LF;
+  output += (data.storeName || "RuniX") + LF;
   output += CMD.NORMAL_SIZE;
   output += CMD.BOLD_OFF;
 
@@ -195,7 +195,7 @@ export async function printReceipt(data: ReceiptData): Promise<void> {
 
   if (data.showWatermark !== false) {
     output += LF;
-    output += "Powered by TerraPOS" + LF;
+    output += "Powered by RuniX" + LF;
   }
 
   output += CMD.FEED;

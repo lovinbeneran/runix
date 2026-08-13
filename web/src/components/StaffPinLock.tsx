@@ -281,7 +281,7 @@ export default function StaffPinLock({ staffAccounts, onLogin, error }: Props) {
       <div className="pin-lock-overlay">
         <div className="pin-lock-card">
           <div className="pin-lock-title">
-            terra <span style={{ color: "var(--brand)" }}>POS</span>
+            <img src="/logo-header.png" alt="RuniX" style={{ height: 32, width: "auto", objectFit: "contain", margin: "0 auto" }} />
           </div>
 
           {!selectedStaff ? (

@@ -17,10 +17,9 @@ import {
 } from "@/lib/staff-session";
 
 const ROLES: { value: StaffRole; label: string }[] = [
-  { value: "kasir", label: "Kasir" },
-  { value: "barista", label: "Barista" },
-  { value: "admin", label: "Admin" },
-  { value: "manager", label: "Manager" },
+  { value: "delta", label: "Delta (Level 1 - Staff & Kasir)" },
+  { value: "omega", label: "Omega (Level 2 - Supervisor & Admin)" },
+  { value: "zeta", label: "Zeta (Level 3 - Manager & Akses Tertinggi)" },
 ];
 
 export default function StaffAccountsPage() {
@@ -29,7 +28,7 @@ export default function StaffAccountsPage() {
   const { role, loadingRole } = useRole();
   const { canAccess, getStaffLimit, level } = useLevel();
 
-  const isOwner = ["owner", "developer"].includes((role || "").toLowerCase());
+  const isOwner = ["owner", "developer", "zeta"].includes((role || "").toLowerCase());
   const staffLimit = getStaffLimit();
   const isUnlimited = staffLimit >= 999;
 
@@ -40,7 +39,7 @@ export default function StaffAccountsPage() {
   // Form state
   const [formName, setFormName] = useState("");
   const [formPin, setFormPin] = useState("");
-  const [formRole, setFormRole] = useState<StaffRole>("kasir");
+  const [formRole, setFormRole] = useState<StaffRole>("delta");
   const [formMsg, setFormMsg] = useState("");
   const [formLoading, setFormLoading] = useState(false);
 
@@ -55,7 +54,7 @@ export default function StaffAccountsPage() {
   function resetForm() {
     setFormName("");
     setFormPin("");
-    setFormRole("kasir");
+    setFormRole("delta");
     setFormMsg("");
     setEditId(null);
     setShowForm(false);
@@ -158,13 +157,7 @@ export default function StaffAccountsPage() {
     await updateStaffAccount(tenantId, s.id, { isActive: !s.isActive });
   }
 
-  if (loading || loadingRole) {
-    return (
-      <TerraPage>
-        <div className="card">Loading...</div>
-      </TerraPage>
-    );
-  }
+  // Direct render for seamless page transition
 
   if (!canAccess("staff")) {
     return (
@@ -173,7 +166,7 @@ export default function StaffAccountsPage() {
           <div style={{ fontSize: 36, marginBottom: 8 }}>&#128274;</div>
           <div className="h1">Fitur Premium</div>
           <div className="small" style={{ marginTop: 10, lineHeight: 1.6 }}>
-            Fitur Staff Account tersedia untuk paket <b>Seed</b> atau lebih tinggi.
+            Fitur Staff Account tersedia untuk paket <b>Delta</b> atau lebih tinggi.
           </div>
           <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={() => r.push("/dashboard")}>
             Kembali ke Dashboard
@@ -201,7 +194,7 @@ export default function StaffAccountsPage() {
   }
 
   return (
-    <TerraPage maxWidth={900}>
+    <TerraPage>
       <style>{`
         .staff-grid{
           display:grid;
@@ -288,11 +281,6 @@ export default function StaffAccountsPage() {
         }
       `}</style>
 
-      {/* Header */}
-      <PageHeader title="Staff Account" subtitle={`Kelola akun staff dengan PIN untuk akses kasir${!isUnlimited ? ` (${staff.length}/${staffLimit})` : ""}`}>
-        <button className="btn" onClick={() => r.push("/dashboard")}>Dashboard</button>
-      </PageHeader>
-
       {/* Add Button */}
       <div className="card" style={{ marginTop: 14 }}>
         <div className="row">
@@ -311,7 +299,7 @@ export default function StaffAccountsPage() {
         </div>
         {!isUnlimited && staff.length >= staffLimit && (
           <div style={{ marginTop: 10, padding: "10px 14px", borderRadius: 10, background: "rgba(213,149,103,0.1)", border: "1px solid var(--brand)", fontSize: 13, fontWeight: 700, color: "var(--brand)" }}>
-            Limit staff tercapai ({staffLimit}/{staffLimit}). Upgrade ke {level === "seed" ? "Core" : "Orbit"} untuk menambah lebih banyak staff.
+            Limit staff tercapai ({staffLimit}/{staffLimit}). Upgrade ke {level === "delta" ? "Omega" : "Zeta"} untuk menambah lebih banyak staff.
           </div>
         )}
       </div>

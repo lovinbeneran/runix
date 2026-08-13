@@ -10,10 +10,10 @@
  * - Di browser shared/publik, user sebaiknya tidak centang "Ingat Saya".
  */
 
-const STORAGE_KEY_EMAIL = "terrapos_saved_email";
-const STORAGE_KEY_PASS = "terrapos_saved_pass";
-const STORAGE_KEY_REMEMBER = "terrapos_remember_me";
-const XOR_KEY = "TerraPOS2024!"; // obfuscation key
+const STORAGE_KEY_EMAIL = "runix_saved_email";
+const STORAGE_KEY_PASS = "runix_saved_pass";
+const STORAGE_KEY_REMEMBER = "runix_remember_me";
+const XOR_KEY = "RuniX2024!"; // obfuscation key
 
 /**
  * Simple XOR obfuscation (bukan enkripsi, hanya supaya tidak plain-text)
